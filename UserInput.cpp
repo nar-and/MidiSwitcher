@@ -28,8 +28,6 @@
 /*-----------------------------------*
  * PRIVATE DEFINES
  *-----------------------------------*/
-#define DEBUG_PRINT_ENC			0
- 
 #define PIN_ENC_A				2
 #define PIN_ENC_B				3
 #define PIN_BTN_ENC				5
@@ -126,124 +124,15 @@ UiEvents_t UserInputRead(void)
     {
 		// Encoder position changed: generate delta event
 		events.EncDelta = (int16_t)(_EncoderPos - _EncoderPrevPos);
-		
-#if DEBUG_PRINT_ENC		
-        Serial.print("ENC POS");
-        Serial.print(_EncoderPos);
-        Serial.print(" DELTA");
-        Serial.println(events.EncDelta);
-#endif 
 
 		// Save position to detect next rotation event
         _EncoderPrevPos = _EncoderPos;
     }  	
 	
-	// *** Process encoder button *** 
-    events.ButtonEnc = BTN_IDLE;	
-    _ButtonEnc.read();    
-    if (_ButtonEnc.wasReleased())
-    {
-        if(_ButtonEncLongPress)
-        {	
-			// Button was released after a long press event - do nothing
-            _ButtonEncLongPress = false;
-        }   
-        else
-        {     
-			// Button was released before long press triggered - generate click event
-            events.ButtonEnc = BTN_CLICK;
-#if DEBUG_PRINT_ENC					
-            Serial.println("BTN ENC CLICK");
-#endif			
-        }        
-    }
-
-    if(!_ButtonEncLongPress)
-    {
-        if(_ButtonEnc.pressedFor(BTN_ENC_LONG_PRESS_MS))
-        {
-			// Generate long press event
-            events.ButtonEnc = BTN_LONG_PRESS;
-
-#if DEBUG_PRINT_ENC			
-            Serial.println("BTN ENC LONGPRESS");
-#endif
-			// Keep track that a long press is in progress, to ignore subsequent release event
-			_ButtonEncLongPress = true;
-        }
-    }
-	
-	// *** Process button 1 *** 	
-    events.Button1 = BTN_IDLE;
-    _Button1.read();
-    if (_Button1.wasReleased())
-    {
-        if(_Button1LongPress)
-        {	
-			// Button was released after a long press event - do nothing
-            _Button1LongPress = false;
-        }   
-        else
-        {     
-			// Button was released before long press triggered - generate click event
-            events.Button1 = BTN_CLICK;
-
-#if DEBUG_PRINT_ENC					
-            Serial.println("BTN 1 CLICK");
-#endif			
-        }        
-    }
-
-    if(!_Button1LongPress)
-    {
-        if(_Button1.pressedFor(BTN_1_LONG_PRESS_MS))
-        {
-			// Generate long press event
-            events.Button1 = BTN_LONG_PRESS;
-
-#if DEBUG_PRINT_ENC			
-            Serial.println("BTN 1 LONGPRESS");
-#endif
-			// Keep track that a long press is in progress, to ignore subsequent release event
-			_Button1LongPress = true;
-        }
-    }
-	
-
-	// *** Process button 2 *** 
-    events.Button2 = BTN_IDLE;
-    _Button2.read();	
-    if (_Button2.wasReleased())
-    {
-        if(_Button2LongPress)
-        {	
-			// Button was released after a long press event - do nothing
-            _Button2LongPress = false;
-        }   
-        else
-        {     
-			// Button was released before long press triggered - generate click event
-            events.Button2 = BTN_CLICK;
-#if DEBUG_PRINT_ENC					
-            Serial.println("BTN 2 CLICK");
-#endif		
-        }        
-    }
-
-    if(!_Button2LongPress)
-    {
-        if(_Button2.pressedFor(BTN_2_LONG_PRESS_MS))
-        {
-			// Generate long press event
-            events.Button2 = BTN_LONG_PRESS;
-
-#if DEBUG_PRINT_ENC			
-            Serial.println("BTN 2 LONGPRESS");
-#endif
-			// Keep track that a long press is in progress, to ignore subsequent release event
-			_Button2LongPress = true;
-        }
-    }		
+	// *** Process buttons *** 
+    events.ButtonEnc = ButtonRead(&_ButtonEnc, &_ButtonEncLongPress, BTN_ENC_LONG_PRESS_MS);	
+    events.Button1 = ButtonRead(&_Button1, &_Button1LongPress, BTN_1_LONG_PRESS_MS);	
+    events.Button2 = ButtonRead(&_Button2, &_Button2LongPress, BTN_2_LONG_PRESS_MS);	
 
     return events;
 }
