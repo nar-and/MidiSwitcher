@@ -10,22 +10,6 @@
 #define INT_STATE_PATCH_EDIT        2
 #define INT_STATE_GLOBAL_SETTINGS   3
 
-
-typedef struct
-{
-    int8_t level;
-    char name[16];
-} MenuItem_t;
-
-typedef struct
-{
-    int8_t      curLevel;
-    int8_t      selItem;
-    int8_t      firstItemShown;
-    int8_t      numItems;
-    MenuItem_t  items[];
-} Menu_t;
-
 class Interface 
 {
 
@@ -46,9 +30,6 @@ private:
 
     void _printPatchInfo(Patch_t patch, bool isActive);
     void _loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str);
-
-
-    void _showEditMenu(Menu_t* menu);
 
     int16_t _selectedPatchIndx;
     int16_t _activePatchIndx;
