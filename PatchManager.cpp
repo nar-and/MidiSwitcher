@@ -15,11 +15,9 @@
 /*-----------------------------------*
  * INCLUDE FILES
  *-----------------------------------*/
-#include "AppLogic.h"
+#include "PatchManager.h"
 #include <stdio.h>          // NULL, sprintf definitions
 #include <Arduino.h>        // All Arduino functions (Serial etc.) 
-#include "UserInput.h"
-#include "Interface.h"
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DEFINITIONS
@@ -29,7 +27,7 @@
 /*-----------------------------------*
  * PRIVATE DEFINES
  *-----------------------------------*/
-#define DEBUG_PRINT		            1
+// None
 
 /*-----------------------------------*
  * PRIVATE MACROS
@@ -56,62 +54,39 @@
  * Usage notes:
  * None
  *--------------------------------------------------------------------------*/
-// None
+
 
 /*-----------------------------------*
  * PRIVATE VARIABLES
  *-----------------------------------*/
-Interface interface;
+
 
 /*-----------------------------------*
  * PUBLIC FUNCTION DEFINITIONS
  *-----------------------------------*/
 /*--------------------------------------------------------------------------*
- * AppSetup - Initialize application logic
+ * Function name - Function description
  *
  * Implementation notes:
  * None
  *--------------------------------------------------------------------------*/
-void AppSetup(void)
+int8_t PatchManager::begin(void)
 {
-#if DEBUG_PRINT
-    // Initialize USB serial (debug printouts)
-    Serial.begin(115200);
-#endif
-
-    // Initialize user input management
-    UserInputInit();
-
-    interface.init();
+    // Load patch library from EEPROM
+    _loadLibrary();
+    return PATCHMGR_OK;
 }
 
-/*--------------------------------------------------------------------------*
- * AppLoop - Application loop 
- *
- * Implementation notes:
- * None
- *--------------------------------------------------------------------------*/
-void AppLoop(void)
+int8_t PatchManager::getPatch(uint16_t indx, Patch_t* patch)
 {
-    // Read user inputs
-    UiEvents_t events = UserInputRead();
-
-    if(UserInputIsAnyActive(events))
+    if(indx >= PATCH_LIBRARY_LEN)
     {
-#if DEBUG_PRINT
-        Serial.print("ENC DELTA:");
-        Serial.print(events.EncDelta);
-        Serial.print(" BTNE:");
-        Serial.print(events.ButtonEnc);
-        Serial.print(" BTN1:");
-        Serial.print(events.Button1);
-        Serial.print(" BTN2:");
-        Serial.println(events.Button2);
-#endif
+        return PATCHMGR_ERROR_GENERIC;
     }
 
-    // Process user inputs
-    interface.refresh(events);
+    *patch = _library[indx];
+
+    return PATCHMGR_OK;
 }
 
 /*-----------------------------------*
@@ -123,6 +98,21 @@ void AppLoop(void)
  * Implementation notes:
  * None
  *--------------------------------------------------------------------------*/
+int8_t PatchManager::_loadLibrary(void)
+{
+    char buf[PATCH_NAME_LEN + 1];
+    // TODO: load from EEPROM
+    for(int i = 0; i < PATCH_LIBRARY_LEN; i++)
+    {   
+        _library[i].num = i;
+        snprintf(buf, PATCH_NAME_LEN + 1, "PATCH%d", i);    
+        strncpy(_library[i].name, buf, PATCH_NAME_LEN + 1);
+        _library[i].loopEnable = i;
+    }
+
+    return PATCHMGR_OK;
+}
+
 
 /****************************************************************************
  ****************************************************************************/

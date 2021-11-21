@@ -15,8 +15,8 @@
  ****************************************************************************
  ****************************************************************************/
 
-#ifndef USER_INPUT_H
-#define USER_INPUT_H
+#ifndef PATCH_MANAGER_H
+#define PATCH_MANAGER_H
 
 /*-----------------------------------*
  * INCLUDE FILES
@@ -27,13 +27,25 @@
  * PUBLIC DEFINES
  *-----------------------------------*/
 // Return codes
-#define UI_OK                       0
-#define UI_ERROR_GENERIC            -1
+#define PATCHMGR_OK                       0
+#define PATCHMGR_ERROR_GENERIC            -1
+#define PATCHMGR_ERROR_NO_PATCH           -2
 
-// Button events
-#define BTN_IDLE                    0
-#define BTN_CLICK                   1
-#define BTN_LONG_PRESS              2
+// Size of patch library (i.e. collection of all the patches)
+#define PATCH_LIBRARY_LEN   10
+
+// Patch name length
+#define PATCH_NAME_LEN      12 
+
+// Loop enable bitmasks
+#define LOOPA_1_EN          0x01
+#define LOOPA_2_EN          0x02
+#define LOOPA_3_EN          0x04
+#define LOOPA_4_EN          0x08
+
+#define LOOPB_1_EN          0x10
+#define LOOPB_2_EN          0x20
+
 
 /*-----------------------------------*
  * PUBLIC MACROS
@@ -45,11 +57,10 @@
  *-----------------------------------*/
 typedef struct
 {
-    int16_t EncDelta;        // Encoder rotations since last read (>0 = CW)
-    uint8_t ButtonEnc;       // Encoder button event
-    uint8_t Button1;         // Button 1 event
-    uint8_t Button2;         // Button 2 event
-} UiEvents_t;
+    uint8_t num;
+    char name[PATCH_NAME_LEN + 1];      // add space for NULL termination
+    uint8_t loopEnable;                 // Loop activation status    
+} Patch_t;
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DECLARATIONS
@@ -71,11 +82,20 @@ typedef struct
  * Usage notes:
  * None
  *--------------------------------------------------------------------------*/
-int8_t UserInputInit(void);
-UiEvents_t UserInputRead(void);
-bool UserInputIsAnyActive(UiEvents_t events);
 
-#endif // USER_INPUT_H
+class PatchManager 
+{
+public: 
+    int8_t begin(void);
+    int8_t getPatch(uint16_t indx, Patch_t* patch);
+
+private:
+    uint16_t _libraryIndx = 0;
+    Patch_t  _library[PATCH_LIBRARY_LEN];
+
+    int8_t _loadLibrary();    
+};
+#endif // PATCH_MANAGER_H
 
 /****************************************************************************
  ****************************************************************************/

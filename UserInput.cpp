@@ -50,8 +50,7 @@
 /*-----------------------------------*
  * PRIVATE TYPEDEFS
  *-----------------------------------*/
-
-
+// None
 
 /*-----------------------------------*
  * PRIVATE FUNCTION PROTOTYPES
@@ -127,14 +126,22 @@ UiEvents_t UserInputRead(void)
 
 		// Save position to detect next rotation event
         _EncoderPrevPos = _EncoderPos;
-    }  	
+    }  
 	
 	// *** Process buttons *** 
     events.ButtonEnc = ButtonRead(&_ButtonEnc, &_ButtonEncLongPress, BTN_ENC_LONG_PRESS_MS);	
     events.Button1 = ButtonRead(&_Button1, &_Button1LongPress, BTN_1_LONG_PRESS_MS);	
-    events.Button2 = ButtonRead(&_Button2, &_Button2LongPress, BTN_2_LONG_PRESS_MS);	
+    events.Button2 = ButtonRead(&_Button2, &_Button2LongPress, BTN_2_LONG_PRESS_MS);
 
     return events;
+}
+
+bool UserInputIsAnyActive(UiEvents_t events)
+{
+    return ((events.EncDelta != 0) || 
+            (events.ButtonEnc != BTN_IDLE) ||
+            (events.Button1 != BTN_IDLE) ||
+            (events.Button2 != BTN_IDLE)); 
 }
 
 /*-----------------------------------*
