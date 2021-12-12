@@ -52,41 +52,54 @@ void MenuShow(Menu_t* menu, bool clearLcd)
     }
 }
 
-void MenuUpdate(Menu_t* menu, int8_t newSelItem)
+void MenuUpdate(Menu_t* menu, uint8_t action, int8_t actionParm)
 {
-    // Limit requested input to maximum selectable item in menu 
-    newSelItem = constrain(newSelItem, 0, menu->numItems - 1);
-    
-    if(newSelItem != menu->selItem)
+    if(action == MENU_ACTION_NEWSEL)
     {
-        // New item selected, visualization must actually change
-        int8_t selOffset = newSelItem - menu->selItem;
-        menu->selItem = newSelItem;
-    
-        if(selOffset > 0)
-        {
-            // Selection going up --> move visible items window only if exceeding upper window limit
-            if(menu->selItem > (menu->firstItemShown + (LCD_NUM_LINES - 1)))
-            {
-                menu->firstItemShown = (menu->selItem - (LCD_NUM_LINES - 1));
-            }
-        }
-        else
-        {
-            // Selection going down (cannot be the same as offset = 0 is ruled out by previous checks)
-            // --> move visible items window only if exceeding lower window limit
-            if(menu->selItem < menu->firstItemShown)
-            {
-                menu->firstItemShown = menu->selItem;
-            }
-        }
+        int8_t newSelItem = actionParm;
 
-        Serial.print("SEL");
-        Serial.print(menu->selItem);
-        Serial.print(" FSW");
-        Serial.println(menu->firstItemShown);
+        // Limit requested input to maximum selectable item in menu 
+        newSelItem = constrain(newSelItem, 0, menu->numItems - 1);
+        
+        if(newSelItem != menu->selItem)
+        {
+            // New item selected, visualization must actually change
+            int8_t selOffset = newSelItem - menu->selItem;
+            menu->selItem = newSelItem;
+        
+            if(selOffset > 0)
+            {
+                // Selection going up --> move visible items window only if exceeding upper window limit
+                if(menu->selItem > (menu->firstItemShown + (LCD_NUM_LINES - 1)))
+                {
+                    menu->firstItemShown = (menu->selItem - (LCD_NUM_LINES - 1));
+                }
+            }
+            else
+            {
+                // Selection going down (cannot be the same as offset = 0 is ruled out by previous checks)
+                // --> move visible items window only if exceeding lower window limit
+                if(menu->selItem < menu->firstItemShown)
+                {
+                    menu->firstItemShown = menu->selItem;
+                }
+            }
 
-        // Update visualized menu
-        MenuShow(menu);
+            Serial.print("SEL");
+            Serial.print(menu->selItem);
+            Serial.print(" FSW");
+            Serial.println(menu->firstItemShown);
+
+            // Update visualized menu
+            MenuShow(menu);
+        }
+    }
+    else if (action == MENU_ACTION_ENTER)
+    {
+        if(menu->items[menu->selItem].onEnterHandler != NULL)
+        {
+            // Invoke requested action
+            menu->items[menu->selItem].onEnterHandler(NULL);
+        }
     }
 }

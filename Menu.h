@@ -30,6 +30,10 @@
 #define     LCD_NUM_LINES       2
 #define     LCD_LINE_LEN        16
 
+#define     MENU_ACTION_NEWSEL      0
+#define     MENU_ACTION_ENTER       1
+
+
 /*-----------------------------------*
  * PUBLIC MACROS
  *-----------------------------------*/
@@ -38,10 +42,14 @@
 /*-----------------------------------*
  * PUBLIC TYPEDEFS
  *-----------------------------------*/
+typedef void (*OnEnterHandler_t)(void* ptrObj);
+
+
 typedef struct
 {
-    int8_t level;
-    char name[LCD_LINE_LEN + 1];
+    int8_t              level;
+    char                name[LCD_LINE_LEN + 1];
+    OnEnterHandler_t    onEnterHandler;
 } MenuItem_t;
 
 typedef struct
@@ -76,7 +84,7 @@ typedef struct
  *--------------------------------------------------------------------------*/
 void MenuInit(Menu_t* menu, LiquidCrystal_I2C* lcdInstance);
 void MenuShow(Menu_t* menu, bool clearLcd = false);
-void MenuUpdate(Menu_t* menu, int8_t newSelItem);
+void MenuUpdate(Menu_t* menu, uint8_t action, int8_t actionParm);
 
 #endif // MENU_H
 
