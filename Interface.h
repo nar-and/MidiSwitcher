@@ -35,7 +35,7 @@ private:
     int16_t _activePatchIndx;
     PatchManager _patchMgr;
     LiquidCrystal_I2C _lcd;  // set the LCD address to 0x27 for a 16 chars and 2 line display
-
+    
     // Used to print structured messages with sprintf()
     char _msgString[128];
 };

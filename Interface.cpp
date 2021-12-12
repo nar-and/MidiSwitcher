@@ -11,6 +11,9 @@ Interface::Interface() : _lcd(0x27, 16, 2)
 
 void Interface::init(void)
 {
+    Wire.begin();
+    Wire.setClock(400000);
+
     // Initialize LCD
     _lcd.init();
     _lcd.clear();
@@ -57,48 +60,3 @@ void Interface::_moveToState(uint8_t state)
     _onEnter = true;
 }
 
-
-void Interface::_loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str)
-{
-    uint8_t indx = 0;
-
-    while(startBit >= stopBit)
-    {
-        str[indx++] = (loopEnable & (1 << startBit--))?('+'):('-');
-    }
-
-    // Add null termination
-    str[indx] = '\0';
-}
-
-void Interface::_printPatchInfo(Patch_t patch, bool isActive)
-{
-    // Print first line
-    _lcd.setCursor(0,0);
-    sprintf(_msgString, "%02d| %-12s", patch.num, patch.name);
-    _lcd.print(_msgString);
-
-    // Print second line
-    _lcd.setCursor(0,1);
-    
-    char tempA[5];
-    char tempB[3];
-    _loopEnableToStr(patch.loopEnable, 5, 2, tempA);
-    _loopEnableToStr(patch.loopEnable, 1, 0, tempB);
-    sprintf(_msgString, "%s| A%s B%s M-", (isActive)?("->"):("  "), tempA, tempB);
-    _lcd.print(_msgString);
-
-#if DEBUG_PRINT_INTERFACE    
-
-    Serial.print((isActive)?("->"):("  "));
-    Serial.print(patch.name);
-
-    Serial.print("  A");
-    Serial.print(tempA);
-
-    Serial.print("  B");
-    Serial.print(tempB);
-
-    Serial.println();
-#endif
-}

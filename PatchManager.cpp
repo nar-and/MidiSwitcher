@@ -107,7 +107,7 @@ int8_t PatchManager::_loadLibrary(void)
         _library[i].num = i;
         snprintf(buf, PATCH_NAME_LEN + 1, "PATCH%d", i);    
         strncpy(_library[i].name, buf, PATCH_NAME_LEN + 1);
-        _library[i].loopEnable = i;
+        _library[i].loopEnable = (i << 1);
     }
 
     return PATCHMGR_OK;
