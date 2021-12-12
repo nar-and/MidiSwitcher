@@ -17,7 +17,7 @@
 /*-----------------------------------*
  * INCLUDE FILES
  *-----------------------------------*/
-#include "AppLogic.h"
+#include "src/AppLogic.h"
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DEFINITIONS
