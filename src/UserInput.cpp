@@ -17,8 +17,8 @@
  *-----------------------------------*/
 #include "UserInput.h"
 #include <Arduino.h>        	// All Arduino functions (Serial etc.) 
-#include <JC_Button.h>          // https://github.com/JChristensen/JC_Button
-#include <Rotary.h>				// https://github.com/buxtronix/arduino/tree/master/libraries/Rotary
+#include "libs/JC_Button/JC_Button.h"          // https://github.com/JChristensen/JC_Button
+#include "libs/Rotary/Rotary.h"				// https://github.com/buxtronix/arduino/tree/master/libraries/Rotary
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DEFINITIONS

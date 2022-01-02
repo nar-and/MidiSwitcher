@@ -22,7 +22,7 @@
  * INCLUDE FILES
  *-----------------------------------*/
 #include <stdint.h>
-#include <LiquidCrystal_I2C.h>
+#include "libs/LiquidCrystal_I2C/LiquidCrystal_I2C.h"
 
 /*-----------------------------------*
  * PUBLIC DEFINES

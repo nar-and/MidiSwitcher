@@ -3,7 +3,7 @@
 
 #include "UserInput.h"
 #include "PatchManager.h"
-#include <LiquidCrystal_I2C.h>
+#include "libs/LiquidCrystal_I2C/LiquidCrystal_I2C.h"
 
 #define INT_STATE_INIT              0
 #define INT_STATE_PATCH_SEL         1
