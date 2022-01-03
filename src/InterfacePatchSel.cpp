@@ -58,14 +58,14 @@ void Interface::_loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t sto
 
 void Interface::_printPatchInfo(Patch_t patch, bool isActive)
 {
-    unsigned long time = millis();
+//    unsigned long time = millis();
 
-    // Print first line
+    // Print first line: patch number + name
     _lcd.setCursor(0,0);
     sprintf(_msgString, "%02d| %-12s", patch.num, patch.name);
     _lcd.print(_msgString);
 
-    // Print second line
+    // Print second line: patch enable indicator, patch loopA/B & midi enable
     _lcd.setCursor(0,1);
     
     char tempA[5];
@@ -77,9 +77,8 @@ void Interface::_printPatchInfo(Patch_t patch, bool isActive)
     sprintf(_msgString, "%s| A%s B%s M%s", (isActive)?(" \x7E"):("  "), tempA, tempB, tempC);
     _lcd.print(_msgString);
 
-    unsigned long elapsed = millis() - time;
-    Serial.println(elapsed);
-
+//    unsigned long elapsed = millis() - time;
+//    Serial.println(elapsed);
 
 #if DEBUG_PRINT_INTERFACE    
 

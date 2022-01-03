@@ -31,8 +31,8 @@
 #define PIN_ENC_A				2
 #define PIN_ENC_B				3
 #define PIN_BTN_ENC				5
-#define PIN_BTN_1				6
-#define PIN_BTN_2				7
+//#define PIN_BTN_1				6
+//#define PIN_BTN_2				7
 
 #define	BTN_ENC_DEBOUNCE_MS			10
 #define	BTN_1_DEBOUNCE_MS			10
@@ -74,8 +74,8 @@ static void EncoderRotate(void);
  * PRIVATE VARIABLES
  *-----------------------------------*/
 static Button _ButtonEnc(PIN_BTN_ENC, BTN_ENC_DEBOUNCE_MS, false);   // false = disable internal pullups 
-static Button _Button1(PIN_BTN_1, BTN_1_DEBOUNCE_MS, false);       
-static Button _Button2(PIN_BTN_2, BTN_2_DEBOUNCE_MS, false);       
+//static Button _Button1(PIN_BTN_1, BTN_1_DEBOUNCE_MS, false);       
+//static Button _Button2(PIN_BTN_2, BTN_2_DEBOUNCE_MS, false);       
 static Rotary _Encoder(PIN_ENC_B, PIN_ENC_A);
 
 static volatile uint16_t _EncoderPos = 0;
@@ -101,8 +101,8 @@ int8_t UserInputInit(void)
 	
 	// Start processing buttons
     _ButtonEnc.begin();
-    _Button1.begin();
-    _Button2.begin();
+//    _Button1.begin();
+//    _Button2.begin();
 
     return UI_OK;
 }
@@ -130,18 +130,22 @@ UiEvents_t UserInputRead(void)
 	
 	// *** Process buttons *** 
     events.ButtonEnc = ButtonRead(&_ButtonEnc, &_ButtonEncLongPress, BTN_ENC_LONG_PRESS_MS);	
-    events.Button1 = ButtonRead(&_Button1, &_Button1LongPress, BTN_1_LONG_PRESS_MS);	
-    events.Button2 = ButtonRead(&_Button2, &_Button2LongPress, BTN_2_LONG_PRESS_MS);
+//    events.Button1 = ButtonRead(&_Button1, &_Button1LongPress, BTN_1_LONG_PRESS_MS);	
+//    events.Button2 = ButtonRead(&_Button2, &_Button2LongPress, BTN_2_LONG_PRESS_MS);
 
     return events;
 }
 
 bool UserInputIsAnyActive(UiEvents_t events)
 {
+/*    
     return ((events.EncDelta != 0) || 
             (events.ButtonEnc != BTN_IDLE) ||
             (events.Button1 != BTN_IDLE) ||
             (events.Button2 != BTN_IDLE)); 
+*/            
+    return ((events.EncDelta != 0) || 
+            (events.ButtonEnc != BTN_IDLE));
 }
 
 /*-----------------------------------*
