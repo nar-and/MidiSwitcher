@@ -1,68 +1,535 @@
 #include "Interface.h"
-#include "Menu.h"
 #include <stdio.h>
 #include <Arduino.h>
 
-/*
-void OnPatchEditExit(void* ptrObj)
+#define MENU_SUBST_VIEW     0
+#define MENU_SUBST_EDIT     1
+
+
+#define LOOPA_EN_STARTPOS           12
+#define LOOPB_EN_STARTPOS           14
+#define ON_OFF_STARTPOS             13
+#define NAME_STARTPOS               3
+
+
+
+#define MAX_LOOP_VAL            1
+
+#define MENU_RESET                  0
+#define MENU_LOOP_ENABLE            1
+#define MENU_LOOP_MUTE              2
+#define MENU_MIDI_OUT               3  
+#define MENU_MIDI_IN                4
+#define MENU_NAME                   5
+
+
+// Inspired by https://github.com/semibran/wrap-around
+// min = range minimum value (included)
+// max = range maximum value (included)
+// Take care about having max >= min otherwise results are not meaningful!
+int wrap(int val, int min, int max)
 {
-    _moveToState(INT_STATE_PATCH_SEL);
-}
-*/
-Patch_t curPatch;
-
-void onLoopAEnablePrint(char* line)
-{   
-    snprintf(line, 16, "%-16s", "++++");
-}
-
-void onLoopBEnablePrint(char* line)
-{
-    snprintf(line, 16, "%-16s", "--");    
-}
-
-
-void onLoopAMutePrint(char* line)
-{
-    snprintf(line, 16, "%-16s", "On");
-}
-
-void onLoopBMutePrint(char* line)
-{
-    snprintf(line, 16, "%-16s", "Off");
-}
-
-void onMidiOutEnablePrint(char* line)
-{
-    snprintf(line, 16, "%-16s", "On");
-}
-
-
-void onMidiInEnablePrint(char* line)
-{
-    snprintf(line, 16, "%-16s", "Off");
+	int val0 = val - min;
+	int max0 = max + 1 - min;
+	
+	return min + ((val0 >= 0) ? 
+				  (val0 % max0) : 
+				  ((val0 % max0 + max0) % max0));
 }
 
-void onPatchNamePrint(char* line)
+char _strMenuTitle[LCD_LINE_LEN + 1];
+
+void Interface::_MenuInit(void)
 {
-    snprintf(line, 16, "%-16s", curPatch.name);
+    _menuState = MENU_LOOP_ENABLE;
+    _prevState = MENU_LOOP_ENABLE;
+    _loopAB = 0;
 }
 
 
-Menu_t _patchEditMenu = 
+void Interface::_MenuUpdate(int16_t delta)
 {
-    NULL,   // lcd
-    0,      // selItem
-    0,      // numItems
-            // items
-    {       
-        {"Loop A", "Enable", ENTRY_TYPE_LOOPEN, onLoopAEnablePrint, NULL},
-        {"Loop A", "Mute", ENTRY_TYPE_ON_OFF, onLoopAEnablePrint, NULL},
-        {"Loop B", "Enable", ENTRY_TYPE_LOOPEN, onLoopBEnablePrint, NULL},
-        {"Loop B", "Mute", ENTRY_TYPE_ON_OFF, onLoopBEnablePrint, NULL},
-        {"MIDI Out", "Enable", ENTRY_TYPE_ON_OFF, onLoopBEnablePrint, NULL},
+    int16_t deltaAbs = (delta >= 0)?(delta):(-delta);
+    int16_t deltaSign = (delta >= 0)?(+1):(-1);
+
+
+    while (deltaAbs > 0)
+    {
+        Serial.print("deltaAbs:");Serial.print(deltaAbs);
+        Serial.print(" deltaSign:");Serial.println(deltaSign);
+        Serial.print("inState:");Serial.print(_menuState);
+
+        switch(_menuState)
+        {
+            case MENU_LOOP_ENABLE:
+                if(deltaSign > 0) 
+                {   
+                    // +1 --> move to next state
+                    _menuState = MENU_LOOP_MUTE;
+                }
+                else 
+                {
+                    // -1 --> go back to MUTE only if processing loop B
+                    if (_loopAB == 1)
+                    {
+                        _loopAB = 0;
+                        _menuState = MENU_LOOP_MUTE;
+                    }
+                    else
+                    {
+                        // Do nothing - first entry
+                    }
+                }
+                break;
+
+            case MENU_LOOP_MUTE:
+                if(deltaSign > 0) 
+                {   
+                    // +1 --> go to LOOP_ENABLE only if processing loop A, otherwise MIDI OUT
+                    if (_loopAB == 0)
+                    {
+                        _loopAB = 1;
+                        _menuState = MENU_LOOP_ENABLE;
+                    }
+                    else
+                    {
+                        _midiOutIndx = 0;
+                        _menuState = MENU_MIDI_OUT;
+                    }
+                }
+                else 
+                {
+                    // -1 --> go to LOOP_ENABLE
+                    _menuState = MENU_LOOP_ENABLE;
+                }
+                break;
+
+            case MENU_MIDI_OUT:
+                if(deltaSign > 0) 
+                {   
+                    _midiOutIndx++;
+                    if(_midiOutIndx >= MAX_NUM_MIDI_OUT)
+                    {
+                        _midiInIndx = 0;
+                        _menuState = MENU_MIDI_IN;
+                    }
+                }
+                else 
+                {
+                    _midiOutIndx--;
+                    if (_midiOutIndx < 0)
+                    {
+                        // -1 && 1st MIDI OUT message --> go to LOOP_MUTE
+                        _loopAB = MAX_LOOP_VAL;
+                        _menuState = MENU_LOOP_MUTE;
+                    }
+                }
+                break;
+
+            case MENU_MIDI_IN:
+                if(deltaSign > 0) 
+                {   
+                    _midiInIndx++;
+                    if(_midiInIndx >= MAX_NUM_MIDI_IN)
+                    {
+                        _menuState = MENU_NAME;
+                    }
+                }
+                else 
+                {
+                    _midiInIndx--;
+                    if (_midiInIndx < 0)
+                    {
+                        // -1 && 1st MIDI IN message --> go to MIDI_OUT
+                        _midiOutIndx = (MAX_NUM_MIDI_OUT - 1);
+                        _menuState = MENU_MIDI_OUT;
+                    }
+                }
+                break;
+
+            case MENU_NAME:
+                if(deltaSign > 0) 
+                {   
+                    // Do nothing - last entry
+                }
+                else
+                {
+                    _midiInIndx = (MAX_NUM_MIDI_IN - 1);
+                    _menuState = MENU_MIDI_IN;
+                }
+
+                break;
+        }
+
+        Serial.print(" outState:");Serial.println(_menuState);        
+
+        deltaAbs--;
     }
+}
+
+
+const char* strNumTabs[] = 
+{
+    "[1]23456",
+    "1[2]3456",
+    "12[3]456",
+    "123[4]56",
+    "1234[5]6",
+    "12345[6]"
 };
+
+void Interface::_printMidiMsg(char* buf, int maxLen, MidiMsg_t msg)
+{
+    if(msg.type == MIDI_TYPE_NONE)
+    {
+        snprintf(buf, maxLen, "%-16s", "Off");
+    }
+    else if (msg.type == MIDI_TYPE_PC)
+    {
+        //snprintf(buf, maxLen, "PC#%03d      Ch%02d", msg.num, msg.chan);
+        snprintf(buf, maxLen, "PC C%02d #%03d     ", msg.chan, msg.num);
+    }
+    else if (msg.type == MIDI_TYPE_CC)
+    {
+        //snprintf(buf, maxLen, "CC#%03d V%03d Ch%02d", msg.num, msg.val, msg.chan);
+        snprintf(buf, maxLen, "CC C%02d #%03d V%03d", msg.chan, msg.num, msg.val);
+    }
+}
+
+void Interface::_MenuShow(bool clearLcd)
+{    
+
+    if(clearLcd)
+    {
+        _lcd.clear();
+    }
+
+    unsigned long curTime = micros();
+
+    switch(_menuState)
+    {          
+        case MENU_LOOP_ENABLE:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
+                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
+                char loopEnStr[5];
+                int8_t startBit =  (_loopAB == 0)?(3):(6);
+                int8_t stopBit =  (_loopAB == 0)?(0):(5);
+                _loopEnableToStr(_curPatch.loopEnable, startBit, stopBit, loopEnStr);
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "Enable%+10s", loopEnStr);
+            }
+            break;
+
+        case MENU_LOOP_MUTE:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
+                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
+                bool loopMuted = (_loopAB == 0)?(_curPatch.loopEnable & LOOPA_MUTE):(_curPatch.loopEnable & LOOPB_MUTE);
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "Mute%+12s", (loopMuted)?("On"):("Off"));
+            }
+            break;
+        
+        case MENU_MIDI_OUT:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "MIDI Out  %6s", strNumTabs[_midiOutIndx]);
+                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| MIDI Out [%d]", curPatch.num, _midiOutIndx);            
+                _printMidiMsg(lcdLine1, LCD_LINE_LEN + 1, _curPatch.midiOut[_midiOutIndx]);
+            }
+            break;
+
+        case MENU_MIDI_IN:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "MIDI In %8s", strNumTabs[_midiInIndx]);
+                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| MIDI In  [%d]", curPatch.num, _midiInIndx);
+                _printMidiMsg(lcdLine1, LCD_LINE_LEN + 1, _curPatch.midiIn[_midiInIndx]);
+            }
+            break;
+
+        case MENU_NAME:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "%-16s", "Name");
+                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| %12s", curPatch.num, "Name");
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "  [%-12s]", _curPatch.name);
+            }
+            break;
+    }    
+
+    unsigned long elapsed = micros() - curTime;
+    Serial.print("EL1:"); Serial.print(elapsed);
+
+    // Print to screen
+    curTime = micros();
+    _lcd.setCursor(0, 0);
+    _lcd.print(lcdLine0);
+
+    elapsed = micros() - curTime;
+    Serial.print(" EL2:"); Serial.print(elapsed);
+
+    curTime = micros();
+    _lcd.setCursor(0, 1);
+    _lcd.print(lcdLine1);
+    elapsed = micros() - curTime;
+    Serial.print(" EL3:"); Serial.println(elapsed);
+
+
+}
+
+
+
+void Interface::_MenuCursorPos(int8_t delta)
+{
+    _selPosition += delta;
+
+    switch(_menuState)
+    {          
+        case MENU_LOOP_ENABLE:
+            {
+                // _selPosition = constrain(_selPosition, 0, (_loopAB == 0)?(3):(1));
+                _selPosition = wrap(_selPosition, 0, (_loopAB == 0)?(3):(1));
+                Serial.print("SELPOS");Serial.println(_selPosition);
+                _curPosition = _selPosition + ((_loopAB == 0)?(LOOPA_EN_STARTPOS):(LOOPB_EN_STARTPOS));
+            }
+            break;
+
+        case MENU_LOOP_MUTE:
+            {
+                _selPosition = 0;
+                _curPosition = ON_OFF_STARTPOS;
+            }
+            break;
+        
+        case MENU_MIDI_OUT:
+        case MENU_MIDI_IN:        
+            {
+                int8_t fieldPos;                
+                int8_t midiCurPos[] = {0, 3, 7, 12};
+
+
+                MidiMsg_t msg = (_menuState == MENU_MIDI_OUT)?
+                                (_curPatch.midiOut[_midiOutIndx]):
+                                (_curPatch.midiIn[_midiInIndx]);
+
+                if(msg.type == MIDI_TYPE_NONE)
+                {
+                    _selPosition = 0;
+                }
+                else if (msg.type == MIDI_TYPE_PC)
+                {
+                    // _selPosition = constrain(_selPosition, 0, 2);
+                    _selPosition = wrap(_selPosition, 0, 2);
+                }
+                else if (msg.type == MIDI_TYPE_CC)
+                {
+                    // _selPosition = constrain(_selPosition, 0, 3);
+                    _selPosition = wrap(_selPosition, 0, 3);
+                }
+                
+                _curPosition = midiCurPos[_selPosition];
+            }
+            break;
+
+        case MENU_NAME:
+            {
+                //_selPosition = constrain(_selPosition, 0, PATCH_NAME_LEN - 1);
+                _selPosition = wrap(_selPosition, 0, PATCH_NAME_LEN - 1);
+                _curPosition = _selPosition + NAME_STARTPOS;
+            }
+            break;
+    }
+
+    Serial.print("CURPOS");Serial.println(_curPosition);
+
+    return;
+}
+
+
+int8_t Interface::_MenuFieldUpdate(int8_t delta)
+{
+    switch(_menuState)
+    {          
+        case MENU_LOOP_ENABLE:
+            {
+                bool loopEnabled = (delta > 0);              
+                
+                // Change character shown
+                _lcd.print((loopEnabled) ? ("+"):("-"));
+                _lcd.setCursor(_curPosition, 1);
+            }
+            break;
+
+        case MENU_LOOP_MUTE:
+            {
+                bool isOn = (delta > 0);
+                
+                // Change character shown
+                _lcd.setCursor(_curPosition - 2, 1);
+                _lcd.print((isOn) ? ("On "):("Off"));
+                _lcd.setCursor(_curPosition, 1);
+            }
+            break;
+        
+        case MENU_MIDI_OUT:
+        case MENU_MIDI_IN:        
+            {
+                MidiMsg_t tempMsg = (_menuState == MENU_MIDI_OUT)?
+                                (_curPatch.midiOut[_midiOutIndx]):
+                                (_curPatch.midiIn[_midiInIndx]);
+
+                switch(_selPosition)
+                {
+                    case 0:
+                        {
+                            tempMsg.type += delta;
+                            tempMsg.type = constrain(tempMsg.type, MIDI_TYPE_NONE, MIDI_TYPE_CC);
+                        }
+                        break;
+                    case 1:
+                        {
+                            tempMsg.chan += delta;
+                            tempMsg.chan = constrain(tempMsg.chan, 0, 15);
+                        }
+                        break;
+                    case 2:
+                        {
+                            tempMsg.num += delta;
+                            tempMsg.num = constrain(tempMsg.num, 0, 127);
+                        }
+                        break;
+                    case 3:
+                        {
+                            tempMsg.val += delta;
+                            tempMsg.val = constrain(tempMsg.val, 0, 127);
+                        }
+                        break;
+                }
+
+                _curPatch.midiOut[_midiOutIndx] = tempMsg;
+                _printMidiMsg(lcdLine1, LCD_LINE_LEN + 1, tempMsg);
+                _lcd.setCursor(0, 1);
+                _lcd.print(lcdLine1);
+                _lcd.setCursor(_curPosition, 1);
+            }
+            break;
+
+        case MENU_NAME:
+            {
+                Serial.print("L1:");Serial.print(_curPatch.name[_selPosition], DEC);
+                char newLetter = _curPatch.name[_selPosition] + delta;
+
+                Serial.print(" L2:");Serial.print(newLetter, DEC);                
+                newLetter = constrain(newLetter, 32, 127);
+
+                Serial.print(" L3:");Serial.println(newLetter, DEC);    
+                _curPatch.name[_selPosition] = newLetter;
+
+                _lcd.print(newLetter);
+                _lcd.setCursor(_curPosition, 1);
+            }
+            break;
+    }
+
+    return 0;
+}
+
+#define NAVI_STYLE      1
+
+void Interface::_statePatchSettings(UiEvents_t events)
+{
+    if(_onEnter)
+    {
+        _onEnter = false;
+        _menuSubstViewEdit = MENU_SUBST_VIEW;
+        _patchMgr.getActivePatch(&_curPatch);
+        _MenuInit();
+        _MenuShow(true);
+
+    }
+
+    if(_menuSubstViewEdit == MENU_SUBST_VIEW)
+    {
+        if(events.EncDelta != 0)
+        {
+            _MenuUpdate(events.EncDelta);
+            _MenuShow(false);
+        }
+
+        if(events.ButtonEnc == BTN_CLICK)
+        {
+            // Move to EDIT substate
+            Serial.println("EDIT");
+            _menuSubstViewEdit = MENU_SUBST_EDIT;
+            _selPosition = 0;
+#if (NAVI_STYLE == 0)
+            _isSelected = false;
+#else
+            _isSelected = true;
+#endif            
+            _MenuCursorPos(0);
+            _lcd.setCursor(_curPosition, 1);
+            // _lcd.cursor();
+            _lcd.blink();
+        }
+
+        if(events.ButtonEnc == BTN_LONG_PRESS)
+        {        
+            _moveToState(INT_STATE_PATCH_SEL);        
+        }
+    }
+    else
+    {
+
+#if (NAVI_STYLE == 0)
+
+        if(_isSelected == false)
+        {
+            // Move around
+            if(events.EncDelta != 0)
+            {
+                Serial.println("MOVE");
+                _MenuCursorPos(events.EncDelta);
+                _lcd.setCursor(_curPosition, 1);
+            }
+        }
+        else
+        {
+            if(events.EncDelta != 0)
+            {
+                Serial.println("UPDATE");            
+                _MenuFieldUpdate(events.EncDelta);
+            }
+        }
+
+        if(events.ButtonEnc == BTN_CLICK)
+        {
+            // Toggle selection state
+            _isSelected = !_isSelected;
+            Serial.print("SELECTED");Serial.println(_isSelected);
+        }
+
+#else
+        if(events.ButtonEnc == BTN_CLICK)
+        {
+            Serial.println("MOVE");
+            _MenuCursorPos(1);
+            _lcd.setCursor(_curPosition, 1);
+        }
+
+        if(events.EncDelta != 0)
+        {
+            Serial.println("UPDATE");            
+            _MenuFieldUpdate(events.EncDelta);
+        }
+#endif
+        if(events.ButtonEnc == BTN_LONG_PRESS)
+        {        
+            Serial.println("VIEW");
+            _menuSubstViewEdit = MENU_SUBST_VIEW;
+            // _lcd.noCursor();
+            _lcd.noBlink();
+        }
+    }
+}
+
 
 
 
@@ -74,37 +541,6 @@ Menu_t _patchEditMenu =
 
 
 #define TEST    0
-
-
-Patch_t patch;
-int8_t  selPosition = 0;
-
-int8_t LoopSelToCursor(int8_t sel)
-{
-    int8_t cur;
-
-    if(sel < 4)
-    {
-        cur = sel + LOOPA_CURSOR_START;
-    }
-    else if (sel < 6)
-    {
-        cur = sel - 4 + LOOPB_CURSOR_START;
-    }
-    else
-    {
-        cur = sel - 6 + MIDI_OUT_CURSOR_START;
-    }
-
-    return cur;
-}
-
-
-
-int8_t NameSelToCursor(int8_t sel)
-{
-    return (sel + NAME_CURSOR_START);
-}
 
 #define BLINK_INTERVAL_MS       500
 
@@ -173,7 +609,7 @@ void BlinkPatchNumberExec(LiquidCrystal_I2C* lcd)
 
 bool letterSelected;
 
-void Interface::_statePatchEdit(UiEvents_t events)
+void Interface::_statePatchSettings(UiEvents_t events)
 {  
     if(_onEnter)
     {        
@@ -192,7 +628,7 @@ void Interface::_statePatchEdit(UiEvents_t events)
 
 #if TEST        
         _lcd.setCursor(LoopSelToCursor(selPosition), 1);
-#endif        
+#endif
         _lcd.cursor();      // Turn on cursor
 
     }
@@ -273,290 +709,3 @@ void Interface::_statePatchEdit(UiEvents_t events)
 }
 
 #endif
-
-
-#define MAX_LOOP_VAL            1
-#define MAX_MIDI_OUT_VAL        3
-
-static uint8_t _loopAB;                 // 0 = A, 1 = B
-static uint8_t _midiOutIndx;
-static bool _midiOutEn[] = {true, false, false, true};
-
-static uint8_t _menuState;
-
-#define MENU_RESET                  0
-#define MENU_LOOP_ENABLE            1
-#define MENU_LOOP_MUTE              2
-#define MENU_MIDI_OUT_EN            3
-#define MENU_MIDI_OUT_TYPE          4
-#define MENU_MIDI_OUT_CHAN          5
-#define MENU_MIDI_OUT_NUM           6
-#define MENU_MIDI_OUT_VAL           7
-#define MENU_NAME                   8
-
-
-char _strMenuTitle[LCD_LINE_LEN + 1];
-
-void Interface::_MenuInit(void)
-{
-    _menuState = MENU_LOOP_ENABLE;
-    _loopAB = 0;
-}
-
-
-void Interface::_MenuUpdate(int16_t delta)
-{
-    int16_t deltaAbs = (delta >= 0)?(delta):(-delta);
-    int16_t deltaSign = (delta >= 0)?(+1):(-1);
-
-
-    while (deltaAbs > 0)
-    {
-        Serial.print("deltaAbs:");Serial.print(deltaAbs);
-        Serial.print(" deltaSign:");Serial.println(deltaSign);
-        Serial.print("inState:");Serial.print(_menuState);
-
-
-        switch(_menuState)
-        {
-            case MENU_LOOP_ENABLE:
-                if(deltaSign > 0) 
-                {   
-                    // +1 --> move to next state
-                    _menuState = MENU_LOOP_MUTE;
-                }
-                else 
-                {
-                    // -1 --> go back to MUTE only if processing loop B
-                    if (_loopAB == 1)
-                    {
-                        _loopAB = 0;
-                        _menuState = MENU_LOOP_MUTE;
-                    }
-                }
-                break;
-
-            case MENU_LOOP_MUTE:
-                if(deltaSign > 0) 
-                {   
-                    // +1 --> go to LOOP_ENABLE only if processing loop A, otherwise MIDI OUT
-                    if (_loopAB == 0)
-                    {
-                        _loopAB = 1;
-                        _menuState = MENU_LOOP_ENABLE;
-                    }
-                    else
-                    {
-                        _midiOutIndx = 0;
-                        _menuState = MENU_MIDI_OUT_EN;
-                    }
-                }
-                else 
-                {
-                    // -1 --> go to LOOP_ENABLE
-                    _menuState = MENU_LOOP_ENABLE;
-                }
-                break;
-
-            case MENU_MIDI_OUT_EN:
-                if(deltaSign > 0) 
-                {   
-                    if(_midiOutEn[_midiOutIndx])
-                    {
-                        // Message enabled --> move to 
-                        _menuState = MENU_MIDI_OUT_TYPE;
-                    }
-                    else
-                    {
-                        _midiOutIndx++;
-                        if(_midiOutIndx > MAX_MIDI_OUT_VAL)
-                        {
-                            _menuState = MENU_NAME;
-                        }
-                    }
-                }
-                else 
-                {
-                    if (_midiOutIndx == 0)
-                    {
-                        // -1 && 1st MIDI OUT message --> go to LOOP_MUTE
-                        _menuState = MENU_LOOP_MUTE;
-                        _loopAB = 1;
-                    }
-                    else
-                    {
-                        // -1 && >1st MIDI OUT message --> go to previous MIDI OUT message
-                        _midiOutIndx--;
-                        if(_midiOutEn[_midiOutIndx])
-                        {
-                            _menuState = MENU_MIDI_OUT_VAL;
-                        }
-                        else
-                        {
-                            _menuState = MENU_MIDI_OUT_EN;
-                        }
-                    }
-                }
-
-                break;
-
-            case MENU_MIDI_OUT_TYPE:
-            case MENU_MIDI_OUT_CHAN:
-            case MENU_MIDI_OUT_NUM:
-                if(deltaSign > 0) 
-                {   
-                    _menuState++;
-                }
-                else
-                {
-                    _menuState--;
-                }
-                break;
-
-            case MENU_MIDI_OUT_VAL:
-                if(deltaSign > 0) 
-                {   
-                    _midiOutIndx++;
-                    if(_midiOutIndx > MAX_MIDI_OUT_VAL)
-                    {
-                        _menuState = MENU_NAME;
-                    }
-                    else
-                    {
-                        _menuState = MENU_MIDI_OUT_EN;
-                    }
-                }
-                else
-                {
-                    _menuState--;
-                }
-                break;
-
-            case MENU_NAME:
-                if(deltaSign > 0) 
-                {   
-
-                }
-                else
-                {
-                    _midiOutIndx = 3;
-                    if(_midiOutEn[_midiOutIndx])
-                    {
-                        _menuState = MENU_MIDI_OUT_VAL;
-                    }
-                    else
-                    {
-                        _menuState = MENU_MIDI_OUT_EN;
-                    }
-                }
-
-                break;
-        }
-
-        Serial.print(" outState:");Serial.println(_menuState);        
-
-        deltaAbs--;
-    }
-}
-
-
-char* strNumTabs[] = 
-{
-    "[1]23456",
-    "1[2]3456",
-    "12[3]456",
-    "123[4]56",
-    "1234[5]6",
-    "12345[6]"
-};
-
-void Interface::_MenuShow(bool clearLcd)
-{    
-    char lcdLine0[LCD_LINE_LEN + 1];    // Accounts for null
-    char lcdLine1[LCD_LINE_LEN + 1];    // Accounts for null
-
-    if(clearLcd)
-    {
-        _lcd.clear();
-    }
-
-    switch(_menuState)
-    {          
-        case MENU_LOOP_ENABLE:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "Enable%+10s", "++-+");                
-            break;
-
-        case MENU_LOOP_MUTE:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "Mute%+12s", "Off");                
-            break;
-        
-        case MENU_MIDI_OUT_EN:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "MIDI Out  %6s", strNumTabs[_midiOutIndx]);
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%d Enable%+7s", _midiOutIndx, (_midiOutEn[_midiOutIndx])?("On"):("Off"));                
-            break;
-
-        case MENU_MIDI_OUT_TYPE:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "%s", "MIDI Out");
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%d Type%+9s", _midiOutIndx, "CC");
-            break;
-
-        case MENU_MIDI_OUT_CHAN:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "%s", "MIDI Out");
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%d Channel%+6s", _midiOutIndx, "01");
-            break;
-
-        case MENU_MIDI_OUT_NUM:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "%s", "MIDI Out");
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%d Number%+7s", _midiOutIndx, "012");
-            break;
-
-        case MENU_MIDI_OUT_VAL:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "%s", "MIDI Out");
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%d Value%+8s", _midiOutIndx, "123");
-            break;
-
-        case MENU_NAME:
-            snprintf(lcdLine0, LCD_LINE_LEN + 1, "%-16s", "Name");
-            snprintf(lcdLine1, LCD_LINE_LEN + 1, "%-16s", "PATCH01");
-            break;
-
-    }    
-
-    // Print
-    _lcd.setCursor(0, 0);
-    _lcd.print(lcdLine0);
-
-    _lcd.setCursor(0, 1);
-    _lcd.print(lcdLine1);
-}
-
-
-void Interface::_statePatchEdit(UiEvents_t events)
-{
-    if(_onEnter)
-    {
-        _onEnter = false;
-        
-        _patchMgr.getActivePatch(&curPatch);
-        _MenuInit();
-        _MenuShow(true);
-        //MenuInit(&_patchEditMenu, &_lcd, curPatch);     // TODO: move away and separate init from reset (i.e. reset indexes to move to beginning)
-        // MenuShow(&_patchEditMenu, true);
-    }
-
-    if(events.EncDelta != 0)
-    {
-        _MenuUpdate(events.EncDelta);
-        _MenuShow(false);
-    }
-
-    // MenuControl(&_patchEditMenu, events);
-
-    if(events.ButtonEnc == BTN_LONG_PRESS)
-    {        
-        _moveToState(INT_STATE_PATCH_SEL);
-    }
-}
-
