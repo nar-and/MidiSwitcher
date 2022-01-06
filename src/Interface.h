@@ -5,6 +5,10 @@
 #include "PatchManager.h"
 #include "libs/LiquidCrystal_I2C/LiquidCrystal_I2C.h"
 
+#define     LCD_NUM_LINES       2
+#define     LCD_LINE_LEN        16
+
+
 #define INT_STATE_INIT              0
 #define INT_STATE_PATCH_SEL         1
 #define INT_STATE_PATCH_EDIT        2
@@ -25,7 +29,7 @@ private:
     void _moveToState(uint8_t state);
 
     void _statePatchSelect(UiEvents_t events);
-    void _statePatchEdit(UiEvents_t events);
+    void _statePatchSettings(UiEvents_t events);
     void _stateGlobalSettings(UiEvents_t events);
 
     void _printPatchInfo(Patch_t patch, bool isActive);
@@ -40,7 +44,25 @@ private:
     void _MenuInit(void);
     void _MenuUpdate(int16_t delta);
     void _MenuShow(bool clearLcd);
+    int8_t _MenuFieldUpdate(int8_t delta);
+    void _MenuCursorPos(int8_t delta);
+    void _printMidiMsg(char* buf, int maxLen, MidiMsg_t msg);
 
+    Patch_t _curPatch;
+
+    uint8_t _menuSubstViewEdit;
+    int8_t _selPosition;
+    int8_t _curPosition;
+    bool _isSelected;
+
+    uint8_t _loopAB;                 // 0 = A, 1 = B
+    int8_t _midiOutIndx;
+    int8_t _midiInIndx;
+    uint8_t _menuState;
+    uint8_t _prevState;
+
+    char lcdLine0[LCD_LINE_LEN + 1];    // Accounts for null
+    char lcdLine1[LCD_LINE_LEN + 1];    // Accounts for null
 };
 
 #endif // INTERFACE_H

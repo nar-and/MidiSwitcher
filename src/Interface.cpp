@@ -40,7 +40,7 @@ void Interface::refresh(UiEvents_t events)
             break;
 
         case INT_STATE_PATCH_EDIT:
-            _statePatchEdit(events);
+            _statePatchSettings(events);
             break;
 
         case INT_STATE_GLOBAL_SETTINGS:
