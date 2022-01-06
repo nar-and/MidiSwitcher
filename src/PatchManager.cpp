@@ -168,10 +168,30 @@ int8_t PatchManager::_loadLibrary(void)
     // TODO: load from EEPROM
     for(int i = 0; i < PATCH_LIBRARY_LEN; i++)
     {   
+        // INITIALIZE WITH DUMMY DATA FOR TESTING
         _library[i].num = i;
-        snprintf(buf, PATCH_NAME_LEN + 1, "PATCH%d", i);    
-        strncpy(_library[i].name, buf, PATCH_NAME_LEN + 1);
-        _library[i].loopEnable = (i << 1);
+
+        // Patch name must be blank-filled!!
+        snprintf(_library[i].name, PATCH_NAME_LEN + 1, "PATCH%02d     ", i);    
+        _library[i].loopEnable = ((i & 0x1) << 7) | 
+                                 ((i & 0x3) << 5) | 
+                                 ((~i & 0x1) << 4) | 
+                                 (i & 0xF);
+        char tmp[16];
+        snprintf(tmp, 16, "%d LPEN%02x", i, _library[i].loopEnable);
+        Serial.println(tmp);
+
+        _library[i].midiOut[0] = {MIDI_TYPE_PC, i, i+1, 0};
+        _library[i].midiOut[1] = {MIDI_TYPE_CC, i, i+2, i+3};
+        _library[i].midiOut[2] = {MIDI_TYPE_NONE, i, i+4, i+5};
+        _library[i].midiOut[3] = {MIDI_TYPE_CC, i, i+6, i+7};
+
+        _library[i].midiIn[0] = {MIDI_TYPE_PC, i, i+1, 0};
+        _library[i].midiIn[1] = {MIDI_TYPE_PC, i, i+2, 0};
+        _library[i].midiIn[2] = {MIDI_TYPE_NONE, i, i+4, i+5};
+        _library[i].midiIn[3] = {MIDI_TYPE_NONE, i, i+4, i+5};
+        _library[i].midiIn[4] = {MIDI_TYPE_PC, i, i+3, 0};
+        _library[i].midiIn[5] = {MIDI_TYPE_PC, i, i+4, 0};
     }
 
     return PATCHMGR_OK;

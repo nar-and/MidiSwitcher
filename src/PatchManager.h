@@ -32,7 +32,7 @@
 #define PATCHMGR_ERROR_NO_PATCH           -2
 
 // Size of patch library (i.e. collection of all the patches)
-#define PATCH_LIBRARY_LEN   10
+#define PATCH_LIBRARY_LEN   64
 
 // Patch name length
 #define PATCH_NAME_LEN      12 
@@ -42,10 +42,19 @@
 #define LOOPA_2_EN          0x02
 #define LOOPA_3_EN          0x04
 #define LOOPA_4_EN          0x08
+#define LOOPA_MUTE          0x10
 
-#define LOOPB_1_EN          0x10
-#define LOOPB_2_EN          0x20
+#define LOOPB_1_EN          0x20
+#define LOOPB_2_EN          0x40
+#define LOOPB_MUTE          0x80
 
+// Allowed midi types
+#define MIDI_TYPE_NONE      0
+#define MIDI_TYPE_PC        1
+#define MIDI_TYPE_CC        2
+
+#define MAX_NUM_MIDI_OUT       4
+#define MAX_NUM_MIDI_IN        6
 
 /*-----------------------------------*
  * PUBLIC MACROS
@@ -55,11 +64,23 @@
 /*-----------------------------------*
  * PUBLIC TYPEDEFS
  *-----------------------------------*/
+
+typedef struct
+{
+    uint8_t type;
+    uint8_t chan;
+    uint8_t num;
+    uint8_t val;
+} MidiMsg_t;
+
+
 typedef struct
 {
     uint8_t num;
     char name[PATCH_NAME_LEN + 1];      // add space for NULL termination
-    uint8_t loopEnable;                 // Loop activation status    
+    uint8_t loopEnable;                 // Loop activation control
+    MidiMsg_t midiOut[MAX_NUM_MIDI_OUT];
+    MidiMsg_t midiIn[MAX_NUM_MIDI_IN];
 } Patch_t;
 
 /*-----------------------------------*
