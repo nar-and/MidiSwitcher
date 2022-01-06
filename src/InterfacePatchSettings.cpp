@@ -225,7 +225,7 @@ void Interface::_MenuShow(bool clearLcd)
                 snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
                 //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
                 bool loopMuted = (_loopAB == 0)?(_curPatch.loopEnable & LOOPA_MUTE):(_curPatch.loopEnable & LOOPB_MUTE);
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "Mute%+12s", (loopMuted)?("On"):("Off"));
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "Mute%+12s", (loopMuted)?("On "):("Off"));
             }
             break;
         
@@ -362,7 +362,6 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
                 bool isOn = (delta > 0);
                 
                 // Change character shown
-                _lcd.setCursor(_curPosition - 2, 1);
                 _lcd.print((isOn) ? ("On "):("Off"));
                 _lcd.setCursor(_curPosition, 1);
             }
@@ -379,26 +378,32 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
                 {
                     case 0:
                         {
-                            tempMsg.type += delta;
-                            tempMsg.type = constrain(tempMsg.type, MIDI_TYPE_NONE, MIDI_TYPE_CC);
+                            int8_t type = tempMsg.type + delta;
+                            tempMsg.type = constrain(type, MIDI_TYPE_NONE, MIDI_TYPE_CC);
                         }
                         break;
                     case 1:
                         {
-                            tempMsg.chan += delta;
-                            tempMsg.chan = constrain(tempMsg.chan, 0, 15);
+                            Serial.print("T1:");Serial.print(tempMsg.chan, DEC);
+                            int8_t chan = tempMsg.chan + delta;
+                            Serial.print(" T2:");Serial.print(chan, DEC);
+                            // tempMsg.chan = constrain(chan, 0, 15);
+                            tempMsg.chan = wrap(chan, 0, 15);
+                            Serial.print(" T3:");Serial.println(tempMsg.chan, DEC);
                         }
                         break;
                     case 2:
                         {
-                            tempMsg.num += delta;
-                            tempMsg.num = constrain(tempMsg.num, 0, 127);
+                            int8_t num = tempMsg.num + delta;
+                            // tempMsg.num = constrain(num, 0, 127);
+                            tempMsg.num = wrap(num, 0, 127);
                         }
                         break;
                     case 3:
                         {
-                            tempMsg.val += delta;
-                            tempMsg.val = constrain(tempMsg.val, 0, 127);
+                            int8_t val = tempMsg.val + delta;
+                            //tempMsg.val = constrain(val, 0, 127);
+                            tempMsg.val = wrap(val, 0, 127);
                         }
                         break;
                 }
@@ -414,15 +419,16 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
         case MENU_NAME:
             {
                 Serial.print("L1:");Serial.print(_curPatch.name[_selPosition], DEC);
-                char newLetter = _curPatch.name[_selPosition] + delta;
+                int16_t newLetter = _curPatch.name[_selPosition] + delta;
 
                 Serial.print(" L2:");Serial.print(newLetter, DEC);                
-                newLetter = constrain(newLetter, 32, 127);
+                // newLetter = constrain(newLetter, 32, 127);
+                newLetter = wrap(newLetter, 32, 127);
 
                 Serial.print(" L3:");Serial.println(newLetter, DEC);    
-                _curPatch.name[_selPosition] = newLetter;
+                _curPatch.name[_selPosition] = (char)newLetter;
 
-                _lcd.print(newLetter);
+                _lcd.print(_curPatch.name[_selPosition]);
                 _lcd.setCursor(_curPosition, 1);
             }
             break;

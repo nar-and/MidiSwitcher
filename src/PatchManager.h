@@ -34,7 +34,7 @@
 // Size of patch library (i.e. collection of all the patches)
 #define PATCH_LIBRARY_LEN   64
 
-// Patch name length
+// Patch name length (excluding null termination)
 #define PATCH_NAME_LEN      12 
 
 // Loop enable bitmasks
@@ -67,7 +67,7 @@
 
 typedef struct
 {
-    uint8_t type;
+    uint8_t type;       // NONE/PC/CC
     uint8_t chan;
     uint8_t num;
     uint8_t val;
