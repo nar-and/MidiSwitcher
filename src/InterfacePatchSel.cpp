@@ -68,11 +68,9 @@ void Interface::_printPatchInfo(Patch_t patch, bool isActive)
     
     char tempA[5];
     char tempB[3];
-    char tempC[2];
-    _loopEnableToStr(patch.loopEnable, 7, 4, tempA);
-    _loopEnableToStr(patch.loopEnable, 3, 2, tempB);
-    _loopEnableToStr(patch.loopEnable, 1, 1, tempC);
-    sprintf(_msgString, "%s| A%s B%s M%s", (isActive)?(" \x7E"):("  "), tempA, tempB, tempC);
+    _loopEnableToStr(patch.loopEnable, 3, 0, tempA);
+    _loopEnableToStr(patch.loopEnable, 6, 5, tempB);
+    sprintf(_msgString, "%s| A%s B%s M0", (isActive)?(" \x7E"):("  "), tempA, tempB);
     _lcd.print(_msgString);
 
 //    unsigned long elapsed = millis() - time;
