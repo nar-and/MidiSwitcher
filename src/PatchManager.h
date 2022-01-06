@@ -87,9 +87,25 @@ class PatchManager
 {
 public: 
     int8_t begin(void);
+    int8_t selectPatch(uint16_t indx);
+    int8_t updateSelection(int16_t delta);
+
+    int8_t activatePatch(uint16_t indx);
+    int8_t activateSelectedPatch(void);
+    
+    uint16_t getSelectedPatchIndx(void);
+    uint16_t getActivePatchIndx(void);
+
+    int8_t getSelectedPatch(Patch_t* patch);
+    int8_t getActivePatch(Patch_t* patch);
     int8_t getPatch(uint16_t indx, Patch_t* patch);
 
+    bool isSelActive(void);
+
+
 private:
+    int16_t _selectedIndx = 0;
+    int16_t _activeIndx = 0;
     uint16_t _libraryIndx = 0;
     Patch_t  _library[PATCH_LIBRARY_LEN];
 

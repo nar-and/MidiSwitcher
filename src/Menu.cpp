@@ -2,23 +2,39 @@
 #include <stdio.h>
 #include <Arduino.h>
 
+static Patch_t _curPatch;
 
-void MenuInit(Menu_t* menu, LiquidCrystal_I2C* lcdInstance)
+
+static void loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str)
+{
+    uint8_t indx = 0;
+
+    while(startBit >= stopBit)
+    {
+        str[indx++] = (loopEnable & (1 << startBit--))?('+'):('-');
+    }
+
+    // Add null termination
+    str[indx] = '\0';
+}
+
+
+void MenuInit(Menu_t* menu, LiquidCrystal_I2C* lcdInstance, Patch_t patch)
 {
     menu->lcd = lcdInstance;
-    menu->curLevel = 0;
     menu->selItem = 0;
-    menu->firstItemShown = 0;
     
     // Count actual number of items, looking for terminator item
     menu->numItems = 0;
-    while(menu->items[menu->numItems].level >= 0)
+    while(menu->items[menu->numItems].type != ENTRY_TYPE_TERM)
     {
         menu->numItems++;
     }
 
     Serial.print("NUMITEMS");
     Serial.println(menu->numItems);
+
+    _curPatch = patch;
 }
 
 void MenuShow(Menu_t* menu, bool clearLcd)
@@ -30,26 +46,26 @@ void MenuShow(Menu_t* menu, bool clearLcd)
         menu->lcd->clear();
     }
 
-    for (int8_t line = 0; line < LCD_NUM_LINES; line++)
-    {        
-        if((menu->firstItemShown + line) <= menu->numItems)
-        {
-            menu->lcd->setCursor(0,line);
-            snprintf(lcdLine, 16, "%-2s%-14s", (menu->selItem == (menu->firstItemShown + line))?("->"):(""), 
-                                                menu->items[menu->firstItemShown + line].name);
-            menu->lcd->print(lcdLine);
+    // First line = menu entry name
+    menu->lcd->setCursor(0, 0);
+    snprintf(lcdLine, 16, "%-14s", menu->items[menu->selItem].name);
+    menu->lcd->print(lcdLine);
 
-            Serial.print("LINE");
-            Serial.print(line);
-            Serial.println(" PRINTED");
-        }
-        else
-        {
-            Serial.print("LINE");
-            Serial.print(line);
-            Serial.println(" SKIPPED");
-        }
+    // Second line : it depends on entry type
+    menu->lcd->setCursor(0, 1);
+
+    if(menu->items[menu->selItem].onPrintHandler != NULL)
+    {
+        // Invoke requested action
+        menu->items[menu->selItem].onPrintHandler(lcdLine);
     }
+    else
+    {
+        // Do nothing --> print blank line
+        snprintf(lcdLine, 16, "%-16s", "");
+    }
+
+    menu->lcd->print(lcdLine);    
 }
 
 void MenuUpdate(Menu_t* menu, uint8_t action, int8_t actionParm)
@@ -63,32 +79,9 @@ void MenuUpdate(Menu_t* menu, uint8_t action, int8_t actionParm)
         
         if(newSelItem != menu->selItem)
         {
-            // New item selected, visualization must actually change
-            int8_t selOffset = newSelItem - menu->selItem;
             menu->selItem = newSelItem;
-        
-            if(selOffset > 0)
-            {
-                // Selection going up --> move visible items window only if exceeding upper window limit
-                if(menu->selItem > (menu->firstItemShown + (LCD_NUM_LINES - 1)))
-                {
-                    menu->firstItemShown = (menu->selItem - (LCD_NUM_LINES - 1));
-                }
-            }
-            else
-            {
-                // Selection going down (cannot be the same as offset = 0 is ruled out by previous checks)
-                // --> move visible items window only if exceeding lower window limit
-                if(menu->selItem < menu->firstItemShown)
-                {
-                    menu->firstItemShown = menu->selItem;
-                }
-            }
-
             Serial.print("SEL");
             Serial.print(menu->selItem);
-            Serial.print(" FSW");
-            Serial.println(menu->firstItemShown);
 
             // Update visualized menu
             MenuShow(menu);
@@ -96,10 +89,21 @@ void MenuUpdate(Menu_t* menu, uint8_t action, int8_t actionParm)
     }
     else if (action == MENU_ACTION_ENTER)
     {
+/*        
         if(menu->items[menu->selItem].onEnterHandler != NULL)
         {
             // Invoke requested action
             menu->items[menu->selItem].onEnterHandler(NULL);
         }
+*/        
+    }
+}
+
+void MenuControl(Menu_t* menu, UiEvents_t events)
+{
+    if(events.EncDelta != 0)
+    {
+        int8_t newSelItem = menu->selItem + events.EncDelta;        
+        MenuUpdate(menu, MENU_ACTION_NEWSEL, newSelItem);
     }
 }

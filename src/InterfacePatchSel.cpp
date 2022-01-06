@@ -8,33 +8,31 @@ void Interface::_statePatchSelect(UiEvents_t events)
     if(_onEnter)
     {
         _onEnter = false;
-        _patchMgr.getPatch(_selectedPatchIndx, &patch);
-        _printPatchInfo(patch, (_selectedPatchIndx == _activePatchIndx));
+        _patchMgr.getSelectedPatch(&patch);
+        _printPatchInfo(patch, _patchMgr.isSelActive());
     }
 
     if(events.EncDelta != 0)
-    {   
+    {           
         // Read new patch
-        _selectedPatchIndx += events.EncDelta;
-        _selectedPatchIndx = constrain(_selectedPatchIndx, 0, PATCH_LIBRARY_LEN - 1);
-
-        _patchMgr.getPatch(_selectedPatchIndx, &patch);
-        _printPatchInfo(patch, (_selectedPatchIndx == _activePatchIndx));
+        _patchMgr.updateSelection(events.EncDelta);
+        _patchMgr.getSelectedPatch(&patch);
+        _printPatchInfo(patch, _patchMgr.isSelActive());
     }
 
     if(events.ButtonEnc == BTN_CLICK)
     {
         // Activate selected patch (if different than currently active patch)
-        if(_activePatchIndx != _selectedPatchIndx)
+        if(_patchMgr.isSelActive() == false)
         {
-            _activePatchIndx = _selectedPatchIndx;
-            _patchMgr.getPatch(_activePatchIndx, &patch);
-            _printPatchInfo(patch, (_selectedPatchIndx == _activePatchIndx));
+            _patchMgr.activateSelectedPatch();
+            _patchMgr.getActivePatch(&patch);
+            _printPatchInfo(patch, _patchMgr.isSelActive());
         }
     }
 
     if((events.ButtonEnc == BTN_LONG_PRESS) && 
-        (_selectedPatchIndx == _activePatchIndx))
+        _patchMgr.isSelActive())
     {   
         // Enable edit mode only if currently shown patch is the active one
         _moveToState(INT_STATE_PATCH_EDIT);

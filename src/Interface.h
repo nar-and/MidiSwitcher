@@ -31,13 +31,16 @@ private:
     void _printPatchInfo(Patch_t patch, bool isActive);
     void _loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str);
 
-    int16_t _selectedPatchIndx;
-    int16_t _activePatchIndx;
     PatchManager _patchMgr;
     LiquidCrystal_I2C _lcd;  // set the LCD address to 0x27 for a 16 chars and 2 line display
     
     // Used to print structured messages with sprintf()
     char _msgString[128];
+
+    void _MenuInit(void);
+    void _MenuUpdate(int16_t delta);
+    void _MenuShow(bool clearLcd);
+
 };
 
 #endif // INTERFACE_H

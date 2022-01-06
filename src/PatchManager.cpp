@@ -77,6 +77,54 @@ int8_t PatchManager::begin(void)
     return PATCHMGR_OK;
 }
 
+int8_t PatchManager::selectPatch(uint16_t indx)
+{
+    if(indx >= PATCH_LIBRARY_LEN)
+    {
+        return PATCHMGR_ERROR_GENERIC;
+    }
+
+    _selectedIndx = indx;
+
+    return PATCHMGR_OK;   
+}
+
+int8_t PatchManager::updateSelection(int16_t delta)
+{
+    _selectedIndx += delta;
+    _selectedIndx = constrain(_selectedIndx, 0, PATCH_LIBRARY_LEN - 1);
+    return PATCHMGR_OK;   
+}
+
+int8_t PatchManager::activatePatch(uint16_t indx)
+{
+    if(indx >= PATCH_LIBRARY_LEN)
+    {
+        return PATCHMGR_ERROR_GENERIC;
+    }
+
+    _activeIndx = indx;
+
+    return PATCHMGR_OK;   
+}
+
+
+int8_t PatchManager::activateSelectedPatch(void)
+{
+    return activatePatch(_selectedIndx);
+}
+
+
+uint16_t PatchManager::getSelectedPatchIndx(void)
+{
+    return _selectedIndx;
+}
+
+uint16_t PatchManager::getActivePatchIndx(void)
+{
+    return _activeIndx;
+}
+
 int8_t PatchManager::getPatch(uint16_t indx, Patch_t* patch)
 {
     if(indx >= PATCH_LIBRARY_LEN)
@@ -87,6 +135,22 @@ int8_t PatchManager::getPatch(uint16_t indx, Patch_t* patch)
     *patch = _library[indx];
 
     return PATCHMGR_OK;
+}
+
+
+int8_t PatchManager::getSelectedPatch(Patch_t* patch)
+{
+    return getPatch(_selectedIndx, patch);
+}
+
+int8_t PatchManager::getActivePatch(Patch_t* patch)
+{
+    return getPatch(_activeIndx, patch);
+}
+
+bool PatchManager::isSelActive(void)
+{
+    return (_selectedIndx == _activeIndx);
 }
 
 /*-----------------------------------*

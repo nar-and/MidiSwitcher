@@ -21,8 +21,6 @@ void Interface::init(void)
 
     // Initialize patch manager
     _patchMgr.begin();
-    _activePatchIndx = 0;
-    _selectedPatchIndx = 0;
 
     // Update screen with currently active patch
     _curState = INT_STATE_INIT;
