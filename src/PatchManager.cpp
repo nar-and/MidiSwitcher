@@ -137,6 +137,18 @@ int8_t PatchManager::getPatch(uint16_t indx, Patch_t* patch)
     return PATCHMGR_OK;
 }
 
+int8_t PatchManager::getPatchName(uint16_t indx, char* name)
+{
+    if(indx >= PATCH_LIBRARY_LEN)
+    {
+        return PATCHMGR_ERROR_GENERIC;
+    }
+
+    strcpy(name, _library[indx].name);
+
+    return PATCHMGR_OK;
+}
+
 
 int8_t PatchManager::getSelectedPatch(Patch_t* patch)
 {

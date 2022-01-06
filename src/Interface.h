@@ -54,12 +54,12 @@ private:
     int8_t _selPosition;
     int8_t _curPosition;
     bool _isSelected;
+    int8_t _writeTarget;
 
     uint8_t _loopAB;                 // 0 = A, 1 = B
     int8_t _midiOutIndx;
     int8_t _midiInIndx;
     uint8_t _menuState;
-    uint8_t _prevState;
 
     char lcdLine0[LCD_LINE_LEN + 1];    // Accounts for null
     char lcdLine1[LCD_LINE_LEN + 1];    // Accounts for null

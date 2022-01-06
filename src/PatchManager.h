@@ -120,6 +120,7 @@ public:
     int8_t getSelectedPatch(Patch_t* patch);
     int8_t getActivePatch(Patch_t* patch);
     int8_t getPatch(uint16_t indx, Patch_t* patch);
+    int8_t getPatchName(uint16_t indx, char* name);
 
     bool isSelActive(void);
 

@@ -10,10 +10,9 @@
 #define LOOPB_EN_STARTPOS           14
 #define ON_OFF_STARTPOS             13
 #define NAME_STARTPOS               3
+#define CONFIRM_STARTPOS            3
 
-
-
-#define MAX_LOOP_VAL            1
+#define MAX_LOOP_VAL                1
 
 #define MENU_RESET                  0
 #define MENU_LOOP_ENABLE            1
@@ -21,6 +20,8 @@
 #define MENU_MIDI_OUT               3  
 #define MENU_MIDI_IN                4
 #define MENU_NAME                   5
+#define MENU_WRITE_COPY             6
+#define MENU_WRITE_CONFIRM          7
 
 
 // Inspired by https://github.com/semibran/wrap-around
@@ -42,7 +43,6 @@ char _strMenuTitle[LCD_LINE_LEN + 1];
 void Interface::_MenuInit(void)
 {
     _menuState = MENU_LOOP_ENABLE;
-    _prevState = MENU_LOOP_ENABLE;
     _loopAB = 0;
 }
 
@@ -150,7 +150,7 @@ void Interface::_MenuUpdate(int16_t delta)
             case MENU_NAME:
                 if(deltaSign > 0) 
                 {   
-                    // Do nothing - last entry
+                    _menuState = MENU_WRITE_COPY;
                 }
                 else
                 {
@@ -159,6 +159,31 @@ void Interface::_MenuUpdate(int16_t delta)
                 }
 
                 break;
+
+            case MENU_WRITE_COPY:
+                if(deltaSign > 0) 
+                {   
+                    _menuState = MENU_WRITE_CONFIRM;
+                }
+                else
+                {
+                    _menuState = MENU_NAME;
+                }
+
+                break;
+
+            case MENU_WRITE_CONFIRM:
+                if(deltaSign > 0) 
+                {   
+                    // Do nothing - last entry
+                }
+                else
+                {
+                    _menuState = MENU_WRITE_COPY;
+                }
+
+                break;                
+
         }
 
         Serial.print(" outState:");Serial.println(_menuState);        
@@ -252,6 +277,20 @@ void Interface::_MenuShow(bool clearLcd)
                 snprintf(lcdLine1, LCD_LINE_LEN + 1, "  [%-12s]", _curPatch.name);
             }
             break;
+
+        case MENU_WRITE_COPY:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "%-16s", "Write/Copy to");
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%02d %-12s", _curPatch.num, _curPatch.name);
+            }
+            break;
+
+        case MENU_WRITE_CONFIRM:
+            {
+                snprintf(lcdLine0, LCD_LINE_LEN + 1, "|Confirm write?|");
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "|NO>        YES|");
+            }
+            break;
     }    
 
     unsigned long elapsed = micros() - curTime;
@@ -270,8 +309,6 @@ void Interface::_MenuShow(bool clearLcd)
     _lcd.print(lcdLine1);
     elapsed = micros() - curTime;
     Serial.print(" EL3:"); Serial.println(elapsed);
-
-
 }
 
 
@@ -335,6 +372,20 @@ void Interface::_MenuCursorPos(int8_t delta)
                 _curPosition = _selPosition + NAME_STARTPOS;
             }
             break;
+
+        case MENU_WRITE_COPY:
+            {
+                _selPosition = 0;
+                _curPosition = 0;
+            }
+            break;
+
+        case MENU_WRITE_CONFIRM:
+            {
+                _selPosition = constrain(_selPosition, -1, 9);
+                _curPosition = _selPosition + CONFIRM_STARTPOS;
+            }
+            break;            
     }
 
     Serial.print("CURPOS");Serial.println(_curPosition);
@@ -384,12 +435,9 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
                         break;
                     case 1:
                         {
-                            Serial.print("T1:");Serial.print(tempMsg.chan, DEC);
                             int8_t chan = tempMsg.chan + delta;
-                            Serial.print(" T2:");Serial.print(chan, DEC);
                             // tempMsg.chan = constrain(chan, 0, 15);
                             tempMsg.chan = wrap(chan, 0, 15);
-                            Serial.print(" T3:");Serial.println(tempMsg.chan, DEC);
                         }
                         break;
                     case 2:
@@ -418,18 +466,97 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
 
         case MENU_NAME:
             {
-                Serial.print("L1:");Serial.print(_curPatch.name[_selPosition], DEC);
                 int16_t newLetter = _curPatch.name[_selPosition] + delta;
 
-                Serial.print(" L2:");Serial.print(newLetter, DEC);                
                 // newLetter = constrain(newLetter, 32, 127);
                 newLetter = wrap(newLetter, 32, 127);
-
-                Serial.print(" L3:");Serial.println(newLetter, DEC);    
                 _curPatch.name[_selPosition] = (char)newLetter;
 
                 _lcd.print(_curPatch.name[_selPosition]);
                 _lcd.setCursor(_curPosition, 1);
+            }
+            break;
+
+        case MENU_WRITE_COPY:
+            {
+                Serial.print("WT1:");Serial.print(_writeTarget);
+
+                if(_writeTarget < 0) _writeTarget = _curPatch.num;
+
+                Serial.print(" WT2:");Serial.print(_writeTarget);
+                _writeTarget += delta;
+
+                Serial.print(" WT3:");Serial.print(_writeTarget);
+                _writeTarget = wrap(_writeTarget, 0, PATCH_LIBRARY_LEN - 1);
+
+                Serial.print(" WT4:");Serial.print(_writeTarget);
+
+                char wtName[PATCH_NAME_LEN + 1];
+                _patchMgr.getPatchName(_writeTarget, wtName);
+
+                Serial.print(" WT5:");Serial.println(wtName);
+
+                _lcd.setCursor(0, 1);
+                snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%02d %-12s", _writeTarget, wtName);
+                _lcd.print(lcdLine1);
+                _lcd.setCursor(_curPosition, 1);
+            }
+            break;
+
+        case MENU_WRITE_CONFIRM:
+            {
+                if(delta < 0)
+                {
+                    // Cancel operation
+                    while(delta < 0)
+                    {
+                        Serial.print("DELTA");Serial.print(delta);
+                        Serial.print(" SEL1");Serial.print(_selPosition);
+                        Serial.print(" CUR1");Serial.print(_curPosition);
+
+                        if((_selPosition >= 0) && (_selPosition <= 8))
+                        {
+                            _lcd.print(" ");
+                        }
+
+                        _MenuCursorPos(-1);
+                        Serial.print(" SEL2");Serial.print(_selPosition);
+                        Serial.print(" CUR2");Serial.println(_curPosition);
+
+                        _lcd.setCursor(_curPosition, 1);
+                        delta++;
+
+                        if(_selPosition < 0)
+                        {
+                            Serial.println("**** EXIT NO ****");
+                        }
+                    }
+
+                }
+                else
+                {
+                    while(delta > 0)
+                    {
+                        Serial.print("DELTA");Serial.print(delta);
+                        Serial.print(" SEL1");Serial.print(_selPosition);
+                        Serial.print(" CUR1");Serial.print(_curPosition);
+                        _MenuCursorPos(1);
+                        Serial.print(" SEL2");Serial.print(_selPosition);
+                        Serial.print(" CUR2");Serial.println(_curPosition);
+                        _lcd.setCursor(_curPosition, 1);
+
+                        if(_selPosition <= 8)
+                        {
+                            _lcd.print(">");
+                            _lcd.setCursor(_curPosition, 1);
+                        }
+                        else
+                        {
+                            Serial.println("**** EXIT YES ****");
+                        }
+                        delta--;
+                    }
+                }
             }
             break;
     }
@@ -464,7 +591,9 @@ void Interface::_statePatchSettings(UiEvents_t events)
             // Move to EDIT substate
             Serial.println("EDIT");
             _menuSubstViewEdit = MENU_SUBST_EDIT;
+            _writeTarget = -1;
             _selPosition = 0;
+
 #if (NAVI_STYLE == 0)
             _isSelected = false;
 #else
@@ -513,17 +642,28 @@ void Interface::_statePatchSettings(UiEvents_t events)
         }
 
 #else
-        if(events.ButtonEnc == BTN_CLICK)
+        if(_menuState != MENU_WRITE_CONFIRM)
         {
-            Serial.println("MOVE");
-            _MenuCursorPos(1);
-            _lcd.setCursor(_curPosition, 1);
-        }
+            if(events.ButtonEnc == BTN_CLICK)
+            {
+                Serial.println("MOVE");
+                _MenuCursorPos(1);
+                _lcd.setCursor(_curPosition, 1);
+            }
 
-        if(events.EncDelta != 0)
+            if(events.EncDelta != 0)
+            {
+                Serial.println("UPDATE");            
+                _MenuFieldUpdate(events.EncDelta);
+            }
+        }
+        else
         {
-            Serial.println("UPDATE");            
-            _MenuFieldUpdate(events.EncDelta);
+            if(events.EncDelta != 0)
+            {
+                Serial.println("UPDATE"); 
+                _MenuFieldUpdate(events.EncDelta);
+            }
         }
 #endif
         if(events.ButtonEnc == BTN_LONG_PRESS)
