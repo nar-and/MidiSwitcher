@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <Arduino.h>
 
-#define MENU_SUBST_VIEW     0
-#define MENU_SUBST_EDIT     1
 
 
 #define LOOPA_EN_STARTPOS           12
@@ -37,8 +35,6 @@ int wrap(int val, int min, int max)
 				  (val0 % max0) : 
 				  ((val0 % max0 + max0) % max0));
 }
-
-char _strMenuTitle[LCD_LINE_LEN + 1];
 
 void Interface::_MenuInit(void)
 {

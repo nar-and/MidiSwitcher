@@ -11,8 +11,12 @@
 
 #define INT_STATE_INIT              0
 #define INT_STATE_PATCH_SEL         1
-#define INT_STATE_PATCH_EDIT        2
+#define INT_STATE_PATCH_SETTINGS    2
 #define INT_STATE_GLOBAL_SETTINGS   3
+
+
+#define MENU_SUBST_VIEW     0
+#define MENU_SUBST_EDIT     1
 
 class Interface 
 {
@@ -47,6 +51,13 @@ private:
     int8_t _MenuFieldUpdate(int8_t delta);
     void _MenuCursorPos(int8_t delta);
     void _printMidiMsg(char* buf, int maxLen, MidiMsg_t msg);
+
+
+    void _MenuGsInit(void);
+    void _MenuGsUpdate(int16_t delta);
+    void _MenuGsShow(bool clearLcd);
+    int8_t _MenuGsFieldUpdate(int8_t delta);
+    void _MenuGsCursorPos(int8_t delta);
 
     Patch_t _curPatch;
 

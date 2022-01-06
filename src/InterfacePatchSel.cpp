@@ -31,11 +31,18 @@ void Interface::_statePatchSelect(UiEvents_t events)
         }
     }
 
-    if((events.ButtonEnc == BTN_LONG_PRESS) && 
-        _patchMgr.isSelActive())
-    {   
-        // Enable edit mode only if currently shown patch is the active one
-        _moveToState(INT_STATE_PATCH_EDIT);
+    if(events.ButtonEnc == BTN_LONG_PRESS)
+    {
+        if(_patchMgr.isSelActive())
+        {   
+            // Enable edit mode only if currently shown patch is the active one
+            _moveToState(INT_STATE_PATCH_SETTINGS);
+        }
+        else
+        {   
+            //... otherwise move to global settings
+            _moveToState(INT_STATE_GLOBAL_SETTINGS);
+        }
     }
 }
 
@@ -68,6 +75,7 @@ void Interface::_printPatchInfo(Patch_t patch, bool isActive)
     
     char tempA[5];
     char tempB[3];
+    char tempC[2];
     _loopEnableToStr(patch.loopEnable, 3, 0, tempA);
     _loopEnableToStr(patch.loopEnable, 6, 5, tempB);
     sprintf(_msgString, "%s| A%s B%s M0", (isActive)?(" \x7E"):("  "), tempA, tempB);
