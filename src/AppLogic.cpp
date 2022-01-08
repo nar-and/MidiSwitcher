@@ -19,7 +19,7 @@
 #include <stdio.h>          // NULL, sprintf definitions
 #include <Arduino.h>        // All Arduino functions (Serial etc.) 
 #include "UserInput.h"
-#include "Interface.h"
+#include "UserInterface.h"
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DEFINITIONS

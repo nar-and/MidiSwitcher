@@ -1,5 +1,5 @@
-#ifndef INTERFACE_H
-#define INTERFACE_H
+#ifndef USER_INTERFACE_H
+#define USER_INTERFACE_H
 
 #include "UserInput.h"
 #include "PatchManager.h"
@@ -74,4 +74,4 @@ private:
     char lcdLine1[LCD_LINE_LEN + 1];    // Accounts for null
 };
 
-#endif // INTERFACE_H
+#endif // USER_INTERFACE_H
