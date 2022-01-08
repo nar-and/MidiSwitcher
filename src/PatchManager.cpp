@@ -70,7 +70,7 @@
  * Implementation notes:
  * None
  *--------------------------------------------------------------------------*/
-int8_t PatchManager::begin(void)
+int8_t PatchManager::init(void)
 {
     // Load patch library from EEPROM
     _loadLibrary();

@@ -107,7 +107,7 @@ typedef struct
 class PatchManager 
 {
 public: 
-    int8_t begin(void);
+    int8_t init(void);
     int8_t selectPatch(uint16_t indx);
     int8_t updateSelection(int16_t delta);
 

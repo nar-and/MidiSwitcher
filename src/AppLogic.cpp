@@ -62,7 +62,7 @@
  * PRIVATE VARIABLES
  *-----------------------------------*/
 static PatchManager patchMgr;
-static UserInterface interface(&patchMgr);
+static UserInterface interface;
 
 /*-----------------------------------*
  * PUBLIC FUNCTION DEFINITIONS
@@ -102,7 +102,8 @@ void AppSetup(void)
     // Initialize user input management
     UserInputInit();
 
-    interface.init();
+    patchMgr.init();
+    interface.init(&patchMgr);
 }
 
 bool testStatus = false;

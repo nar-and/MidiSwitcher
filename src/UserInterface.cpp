@@ -4,13 +4,24 @@
 
 #define DEBUG_PRINT_INTERFACE       1
 
-UserInterface::UserInterface(PatchManager* pm) : _lcd(0x27, 16, 2)
+/**
+ * @brief Construct a new User Interface:: User Interface object
+ * 
+ */
+UserInterface::UserInterface() : _lcd(LCD_ADDRESS, LCD_LINE_LEN, LCD_NUM_LINES)
 {
-    _patchMgr = pm;
 }
 
-void UserInterface::init(void)
+/**
+ * @brief 
+ * 
+ * @param pm 
+ */
+void UserInterface::init(PatchManager* pm)
 {
+    _patchMgr = pm;
+
+    // TODO: move out the Wire initialization!!
     Wire.begin();
     Wire.setClock(400000);
 
@@ -19,22 +30,22 @@ void UserInterface::init(void)
     _lcd.clear();
     _lcd.backlight();
 
-    // Initialize patch manager
-    _patchMgr->begin();
+    // Initialize state book-keeping variables
+    _onEnter = false;
 
     // Update screen with currently active patch
-    _curState = INT_STATE_INIT;
-    _onEnter = false;
+    _moveToState(INT_STATE_PATCH_SEL);
 }
 
+/**
+ * @brief 
+ * 
+ * @param events 
+ */
 void UserInterface::refresh(UiEvents_t events)
 {
     switch(_curState)
     {
-        case INT_STATE_INIT:
-            _moveToState(INT_STATE_PATCH_SEL);
-            break;
-
         case INT_STATE_PATCH_SEL:
             _statePatchSelect(events);
             break;
@@ -52,6 +63,11 @@ void UserInterface::refresh(UiEvents_t events)
     }
 }
 
+/**
+ * @brief 
+ * 
+ * @param state 
+ */
 void UserInterface::_moveToState(uint8_t state)
 {
     _curState = state;

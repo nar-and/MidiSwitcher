@@ -5,14 +5,14 @@
 #include "PatchManager.h"
 #include "libs/LiquidCrystal_I2C/LiquidCrystal_I2C.h"
 
-#define     LCD_NUM_LINES       2
-#define     LCD_LINE_LEN        16
+#define     LCD_ADDRESS             0x27
+#define     LCD_NUM_LINES           2
+#define     LCD_LINE_LEN            16
 
 
-#define INT_STATE_INIT              0
-#define INT_STATE_PATCH_SEL         1
-#define INT_STATE_PATCH_SETTINGS    2
-#define INT_STATE_GLOBAL_SETTINGS   3
+#define INT_STATE_PATCH_SEL         0
+#define INT_STATE_PATCH_SETTINGS    1
+#define INT_STATE_GLOBAL_SETTINGS   2
 
 
 #define MENU_SUBST_VIEW     0
@@ -21,8 +21,8 @@
 class UserInterface 
 {
 public:
-    UserInterface(PatchManager* pm);
-    void init(void);
+    UserInterface();
+    void init(PatchManager* pm);
     void refresh(UiEvents_t events);
 
 private:
