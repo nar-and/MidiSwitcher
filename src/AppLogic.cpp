@@ -61,7 +61,8 @@
 /*-----------------------------------*
  * PRIVATE VARIABLES
  *-----------------------------------*/
-Interface interface;
+static PatchManager patchMgr;
+static UserInterface interface(&patchMgr);
 
 /*-----------------------------------*
  * PUBLIC FUNCTION DEFINITIONS

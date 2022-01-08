@@ -4,7 +4,7 @@
 #define MENU_GS_MIDI_IN             0
 #define MENU_GS_FACTORY_RESET       1
 
-void Interface::_stateGlobalSettings(UiEvents_t events)
+void UserInterface::_stateGlobalSettings(UiEvents_t events)
 {
     if(_onEnter)
     {
@@ -63,13 +63,13 @@ void Interface::_stateGlobalSettings(UiEvents_t events)
     }
 }
 
-void Interface::_MenuGsInit(void)
+void UserInterface::_MenuGsInit(void)
 {
     _menuState = MENU_GS_MIDI_IN;
 }
 
 
-void Interface::_MenuGsUpdate(int16_t delta)
+void UserInterface::_MenuGsUpdate(int16_t delta)
 {
     int16_t deltaAbs = (delta >= 0)?(delta):(-delta);
     int16_t deltaSign = (delta >= 0)?(+1):(-1);
@@ -109,7 +109,7 @@ void Interface::_MenuGsUpdate(int16_t delta)
 }
 
 
-void Interface::_MenuGsShow(bool clearLcd)
+void UserInterface::_MenuGsShow(bool clearLcd)
 {    
     if(clearLcd)
     {
@@ -141,7 +141,7 @@ void Interface::_MenuGsShow(bool clearLcd)
     _lcd.print(lcdLine1);
 }
 
-void Interface::_MenuGsCursorPos(int8_t delta)
+void UserInterface::_MenuGsCursorPos(int8_t delta)
 {
     _selPosition += delta;
 
@@ -169,7 +169,7 @@ void Interface::_MenuGsCursorPos(int8_t delta)
 }
 
 
-int8_t Interface::_MenuGsFieldUpdate(int8_t delta)
+int8_t UserInterface::_MenuGsFieldUpdate(int8_t delta)
 {
     switch(_menuState)
     {          

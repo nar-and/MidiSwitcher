@@ -18,20 +18,16 @@
 #define MENU_SUBST_VIEW     0
 #define MENU_SUBST_EDIT     1
 
-class Interface 
+class UserInterface 
 {
-
 public:
-    Interface();
+    UserInterface(PatchManager* pm);
     void init(void);
     void refresh(UiEvents_t events);
 
 private:
-    bool _onEnter;
-    uint8_t _curState;
-
     void _moveToState(uint8_t state);
-
+    
     void _statePatchSelect(UiEvents_t events);
     void _statePatchSettings(UiEvents_t events);
     void _stateGlobalSettings(UiEvents_t events);
@@ -39,8 +35,10 @@ private:
     void _printPatchInfo(Patch_t patch, bool isActive);
     void _loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str);
 
-    PatchManager _patchMgr;
+    PatchManager* _patchMgr;
     LiquidCrystal_I2C _lcd;  // set the LCD address to 0x27 for a 16 chars and 2 line display
+    bool    _onEnter;
+    uint8_t _curState;
     
     // Used to print structured messages with sprintf()
     char _msgString[128];

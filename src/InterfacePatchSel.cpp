@@ -1,39 +1,39 @@
 #include "Interface.h"
 #include <Arduino.h>
 
-void Interface::_statePatchSelect(UiEvents_t events)
+void UserInterface::_statePatchSelect(UiEvents_t events)
 {
     Patch_t patch;
 
     if(_onEnter)
     {
         _onEnter = false;
-        _patchMgr.getSelectedPatch(&patch);
-        _printPatchInfo(patch, _patchMgr.isSelActive());
+        _patchMgr->getSelectedPatch(&patch);
+        _printPatchInfo(patch, _patchMgr->isSelActive());
     }
 
     if(events.EncDelta != 0)
     {           
         // Read new patch
-        _patchMgr.updateSelection(events.EncDelta);
-        _patchMgr.getSelectedPatch(&patch);
-        _printPatchInfo(patch, _patchMgr.isSelActive());
+        _patchMgr->updateSelection(events.EncDelta);
+        _patchMgr->getSelectedPatch(&patch);
+        _printPatchInfo(patch, _patchMgr->isSelActive());
     }
 
     if(events.ButtonEnc == BTN_CLICK)
     {
         // Activate selected patch (if different than currently active patch)
-        if(_patchMgr.isSelActive() == false)
+        if(_patchMgr->isSelActive() == false)
         {
-            _patchMgr.activateSelectedPatch();
-            _patchMgr.getActivePatch(&patch);
-            _printPatchInfo(patch, _patchMgr.isSelActive());
+            _patchMgr->activateSelectedPatch();
+            _patchMgr->getActivePatch(&patch);
+            _printPatchInfo(patch, _patchMgr->isSelActive());
         }
     }
 
     if(events.ButtonEnc == BTN_LONG_PRESS)
     {
-        if(_patchMgr.isSelActive())
+        if(_patchMgr->isSelActive())
         {   
             // Enable edit mode only if currently shown patch is the active one
             _moveToState(INT_STATE_PATCH_SETTINGS);
@@ -48,7 +48,7 @@ void Interface::_statePatchSelect(UiEvents_t events)
 
 
 
-void Interface::_loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str)
+void UserInterface::_loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str)
 {
     uint8_t indx = 0;
 
@@ -61,7 +61,7 @@ void Interface::_loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t sto
     str[indx] = '\0';
 }
 
-void Interface::_printPatchInfo(Patch_t patch, bool isActive)
+void UserInterface::_printPatchInfo(Patch_t patch, bool isActive)
 {
 //    unsigned long time = millis();
 

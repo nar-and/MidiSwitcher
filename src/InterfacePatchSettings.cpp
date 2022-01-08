@@ -36,14 +36,14 @@ int wrap(int val, int min, int max)
 				  ((val0 % max0 + max0) % max0));
 }
 
-void Interface::_MenuInit(void)
+void UserInterface::_MenuInit(void)
 {
     _menuState = MENU_LOOP_ENABLE;
     _loopAB = 0;
 }
 
 
-void Interface::_MenuUpdate(int16_t delta)
+void UserInterface::_MenuUpdate(int16_t delta)
 {
     int16_t deltaAbs = (delta >= 0)?(delta):(-delta);
     int16_t deltaSign = (delta >= 0)?(+1):(-1);
@@ -199,7 +199,7 @@ const char* strNumTabs[] =
     "12345[6]"
 };
 
-void Interface::_printMidiMsg(char* buf, int maxLen, MidiMsg_t msg)
+void UserInterface::_printMidiMsg(char* buf, int maxLen, MidiMsg_t msg)
 {
     if(msg.type == MIDI_TYPE_NONE)
     {
@@ -217,7 +217,7 @@ void Interface::_printMidiMsg(char* buf, int maxLen, MidiMsg_t msg)
     }
 }
 
-void Interface::_MenuShow(bool clearLcd)
+void UserInterface::_MenuShow(bool clearLcd)
 {    
 
     if(clearLcd)
@@ -309,7 +309,7 @@ void Interface::_MenuShow(bool clearLcd)
 
 
 
-void Interface::_MenuCursorPos(int8_t delta)
+void UserInterface::_MenuCursorPos(int8_t delta)
 {
     _selPosition += delta;
 
@@ -390,7 +390,7 @@ void Interface::_MenuCursorPos(int8_t delta)
 }
 
 
-int8_t Interface::_MenuFieldUpdate(int8_t delta)
+int8_t UserInterface::_MenuFieldUpdate(int8_t delta)
 {
     switch(_menuState)
     {          
@@ -488,7 +488,7 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
                 Serial.print(" WT4:");Serial.print(_writeTarget);
 
                 char wtName[PATCH_NAME_LEN + 1];
-                _patchMgr.getPatchName(_writeTarget, wtName);
+                _patchMgr->getPatchName(_writeTarget, wtName);
 
                 Serial.print(" WT5:");Serial.println(wtName);
 
@@ -562,13 +562,13 @@ int8_t Interface::_MenuFieldUpdate(int8_t delta)
 
 #define NAVI_STYLE      1
 
-void Interface::_statePatchSettings(UiEvents_t events)
+void UserInterface::_statePatchSettings(UiEvents_t events)
 {
     if(_onEnter)
     {
         _onEnter = false;
         _menuSubstViewEdit = MENU_SUBST_VIEW;
-        _patchMgr.getActivePatch(&_curPatch);
+        _patchMgr->getActivePatch(&_curPatch);
         _MenuInit();
         _MenuShow(true);
 
@@ -757,7 +757,7 @@ void Interface::_statePatchSettings(UiEvents_t events)
     {        
         _onEnter = false;
         
-        _patchMgr.getPatch(_activePatchIndx, &patch);   // Read active patch
+        _patchMgr->getPatch(_activePatchIndx, &patch);   // Read active patch
         _printPatchInfo(patch, true);
         
         // Initialize patch number blinking

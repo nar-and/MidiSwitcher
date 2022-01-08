@@ -4,12 +4,12 @@
 
 #define DEBUG_PRINT_INTERFACE       1
 
-Interface::Interface() : _lcd(0x27, 16, 2)
+UserInterface::UserInterface(PatchManager* pm) : _lcd(0x27, 16, 2)
 {
-
+    _patchMgr = pm;
 }
 
-void Interface::init(void)
+void UserInterface::init(void)
 {
     Wire.begin();
     Wire.setClock(400000);
@@ -20,14 +20,14 @@ void Interface::init(void)
     _lcd.backlight();
 
     // Initialize patch manager
-    _patchMgr.begin();
+    _patchMgr->begin();
 
     // Update screen with currently active patch
     _curState = INT_STATE_INIT;
     _onEnter = false;
 }
 
-void Interface::refresh(UiEvents_t events)
+void UserInterface::refresh(UiEvents_t events)
 {
     switch(_curState)
     {
@@ -52,7 +52,7 @@ void Interface::refresh(UiEvents_t events)
     }
 }
 
-void Interface::_moveToState(uint8_t state)
+void UserInterface::_moveToState(uint8_t state)
 {
     _curState = state;
     _onEnter = true;
