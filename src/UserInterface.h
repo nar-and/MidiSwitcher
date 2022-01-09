@@ -3,11 +3,9 @@
 
 #include "UserInput.h"
 #include "PatchManager.h"
-#include "libs/LiquidCrystal_I2C/LiquidCrystal_I2C.h"
+#include "Display.h"
+#include "Menu.h"
 
-#define     LCD_ADDRESS             0x27
-#define     LCD_NUM_LINES           2
-#define     LCD_LINE_LEN            16
 
 
 #define INT_STATE_PATCH_SEL         0
@@ -17,6 +15,12 @@
 
 #define MENU_SUBST_VIEW     0
 #define MENU_SUBST_EDIT     1
+
+
+
+#define MENU_GS_MIDI_IN             0
+#define MENU_GS_FACTORY_RESET       1
+
 
 class UserInterface 
 {
@@ -36,7 +40,7 @@ private:
     void _loopEnableToStr(uint8_t loopEnable, int8_t startBit, int8_t stopBit, char* str);
 
     PatchManager* _patchMgr;
-    LiquidCrystal_I2C _lcd;  // set the LCD address to 0x27 for a 16 chars and 2 line display
+    Display _lcd;  // set the LCD address to 0x27 for a 16 chars and 2 line display
     bool    _onEnter;
     uint8_t _curState;
     
@@ -49,13 +53,6 @@ private:
     int8_t _MenuFieldUpdate(int8_t delta);
     void _MenuCursorPos(int8_t delta);
     void _printMidiMsg(char* buf, int maxLen, MidiMsg_t msg);
-
-
-    void _MenuGsInit(void);
-    void _MenuGsUpdate(int16_t delta);
-    void _MenuGsShow(bool clearLcd);
-    int8_t _MenuGsFieldUpdate(int8_t delta);
-    void _MenuGsCursorPos(int8_t delta);
 
     Patch_t _curPatch;
 
@@ -70,8 +67,8 @@ private:
     int8_t _midiInIndx;
     uint8_t _menuState;
 
-    char lcdLine0[LCD_LINE_LEN + 1];    // Accounts for null
-    char lcdLine1[LCD_LINE_LEN + 1];    // Accounts for null
+
+    Menu* _globalSettingsMenu;
 };
 
 #endif // USER_INTERFACE_H

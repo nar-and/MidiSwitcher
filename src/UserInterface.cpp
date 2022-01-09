@@ -1,6 +1,9 @@
 #include "UserInterface.h"
 #include "PatchManager.h"
 #include <Arduino.h>
+#include "screens/ScreenGsMidiIn.h"
+#include "screens/ScreenGsFactoryReset.h"
+#include "Menu.h"
 
 #define DEBUG_PRINT_INTERFACE       1
 
@@ -8,8 +11,10 @@
  * @brief Construct a new User Interface:: User Interface object
  * 
  */
-UserInterface::UserInterface() : _lcd(LCD_ADDRESS, LCD_LINE_LEN, LCD_NUM_LINES)
+UserInterface::UserInterface() : 
+    _lcd(LCD_ADDRESS, LCD_LINE_LEN, LCD_NUM_LINES)
 {
+    _globalSettingsMenu = new Menu(this, &_lcd);
 }
 
 /**
@@ -25,15 +30,22 @@ void UserInterface::init(PatchManager* pm)
     Wire.begin();
     Wire.setClock(400000);
 
-    // Initialize LCD
+    // Initialize LCD & turn on the backlight
     _lcd.init();
     _lcd.clear();
     _lcd.backlight();
+
+
+    // Initialize global settings menu
+    _globalSettingsMenu->registerScreen(MENU_GS_MIDI_IN, new ScreenGsMidiIn());
+    _globalSettingsMenu->registerScreen(MENU_GS_FACTORY_RESET, new ScreenGsFactoryReset());
 
     // Initialize state book-keeping variables
     _onEnter = false;
 
     // Update screen with currently active patch
+
+    Serial.println("START");
     _moveToState(INT_STATE_PATCH_SEL);
 }
 
