@@ -65,8 +65,19 @@ public:
         }
     }
 
+    void setFirstTab() 
+    {
+        _curTab = 0;
+    }
+
+    void setLastTab() 
+    {
+        _curTab = (_numTabs - 1);
+    }
+
     virtual void show() = 0;
-    virtual void updateScreen(int16_t delta) = 0;
+
+    virtual void updateScreen(int16_t delta);
     virtual void updateCursor(int16_t delta) = 0;    
     virtual void updateValue(int16_t delta) = 0;
 };
