@@ -33,7 +33,7 @@
 // Button events
 #define BTN_IDLE                    0
 #define BTN_CLICK                   1
-#define BTN_LONG_PRESS              2
+#define BTN_LONG                    2
 
 /*-----------------------------------*
  * PUBLIC MACROS

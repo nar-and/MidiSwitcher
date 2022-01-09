@@ -174,7 +174,7 @@ uint8_t ButtonRead(Button* btn, bool* isLongPress, uint16_t longPressMs)
         if(btn->pressedFor(longPressMs))
         {
 			// Generate long press event
-            status = BTN_LONG_PRESS;
+            status = BTN_LONG;
 
 			// Keep track that a long press is in progress, to ignore subsequent release event
 			*isLongPress = true;
