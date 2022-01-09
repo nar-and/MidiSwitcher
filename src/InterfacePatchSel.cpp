@@ -31,7 +31,7 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
         }
     }
 
-    if(events.ButtonEnc == BTN_LONG_PRESS)
+    if(events.ButtonEnc == BTN_LONG)
     {
         if(_patchMgr->isSelActive())
         {   

@@ -231,60 +231,60 @@ void UserInterface::_MenuShow(bool clearLcd)
     {          
         case MENU_LOOP_ENABLE:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
-                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
+                //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
                 char loopEnStr[5];
                 int8_t startBit =  (_loopAB == 0)?(3):(6);
                 int8_t stopBit =  (_loopAB == 0)?(0):(5);
                 _loopEnableToStr(_curPatch.loopEnable, startBit, stopBit, loopEnStr);
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "Enable%+10s", loopEnStr);
+                snprintf(_lcd.line1, LCD_LINE_LEN + 1, "Enable%+10s", loopEnStr);
             }
             break;
 
         case MENU_LOOP_MUTE:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
-                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "Loop %-11s", (_loopAB == 0)?("A"):("B"));
+                //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| Loop %-7s", curPatch.num, (_loopAB == 0)?("A"):("B"));
                 bool loopMuted = (_loopAB == 0)?(_curPatch.loopEnable & LOOPA_MUTE):(_curPatch.loopEnable & LOOPB_MUTE);
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "Mute%+12s", (loopMuted)?("On "):("Off"));
+                snprintf(_lcd.line1, LCD_LINE_LEN + 1, "Mute%+12s", (loopMuted)?("On "):("Off"));
             }
             break;
         
         case MENU_MIDI_OUT:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "MIDI Out  %6s", strNumTabs[_midiOutIndx]);
-                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| MIDI Out [%d]", curPatch.num, _midiOutIndx);            
-                _printMidiMsg(lcdLine1, LCD_LINE_LEN + 1, _curPatch.midiOut[_midiOutIndx]);
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "MIDI Out  %6s", strNumTabs[_midiOutIndx]);
+                //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| MIDI Out [%d]", curPatch.num, _midiOutIndx);            
+                _printMidiMsg(_lcd.line1, LCD_LINE_LEN + 1, _curPatch.midiOut[_midiOutIndx]);
             }
             break;
 
         case MENU_MIDI_IN:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "MIDI In %8s", strNumTabs[_midiInIndx]);
-                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| MIDI In  [%d]", curPatch.num, _midiInIndx);
-                _printMidiMsg(lcdLine1, LCD_LINE_LEN + 1, _curPatch.midiIn[_midiInIndx]);
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "MIDI In %8s", strNumTabs[_midiInIndx]);
+                //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| MIDI In  [%d]", curPatch.num, _midiInIndx);
+                _printMidiMsg(_lcd.line1, LCD_LINE_LEN + 1, _curPatch.midiIn[_midiInIndx]);
             }
             break;
 
         case MENU_NAME:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "%-16s", "Name");
-                //snprintf(lcdLine0, LCD_LINE_LEN + 1, "%02d| %12s", curPatch.num, "Name");
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "  [%-12s]", _curPatch.name);
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%-16s", "Name");
+                //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| %12s", curPatch.num, "Name");
+                snprintf(_lcd.line1, LCD_LINE_LEN + 1, "  [%-12s]", _curPatch.name);
             }
             break;
 
         case MENU_WRITE_COPY:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "%-16s", "Write/Copy to");
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%02d %-12s", _curPatch.num, _curPatch.name);
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%-16s", "Write/Copy to");
+                snprintf(_lcd.line1, LCD_LINE_LEN + 1, "#%02d %-12s", _curPatch.num, _curPatch.name);
             }
             break;
 
         case MENU_WRITE_CONFIRM:
             {
-                snprintf(lcdLine0, LCD_LINE_LEN + 1, "|Confirm write?|");
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "|NO>        YES|");
+                snprintf(_lcd.line0, LCD_LINE_LEN + 1, "|Confirm write?|");
+                snprintf(_lcd.line1, LCD_LINE_LEN + 1, "|NO>        YES|");
             }
             break;
     }    
@@ -295,14 +295,14 @@ void UserInterface::_MenuShow(bool clearLcd)
     // Print to screen
     curTime = micros();
     _lcd.setCursor(0, 0);
-    _lcd.print(lcdLine0);
+    _lcd.print(_lcd.line0);
 
     elapsed = micros() - curTime;
     Serial.print(" EL2:"); Serial.print(elapsed);
 
     curTime = micros();
     _lcd.setCursor(0, 1);
-    _lcd.print(lcdLine1);
+    _lcd.print(_lcd.line1);
     elapsed = micros() - curTime;
     Serial.print(" EL3:"); Serial.println(elapsed);
 }
@@ -453,9 +453,9 @@ int8_t UserInterface::_MenuFieldUpdate(int8_t delta)
                 }
 
                 _curPatch.midiOut[_midiOutIndx] = tempMsg;
-                _printMidiMsg(lcdLine1, LCD_LINE_LEN + 1, tempMsg);
+                _printMidiMsg(_lcd.line1, LCD_LINE_LEN + 1, tempMsg);
                 _lcd.setCursor(0, 1);
-                _lcd.print(lcdLine1);
+                _lcd.print(_lcd.line1);
                 _lcd.setCursor(_curPosition, 1);
             }
             break;
@@ -493,8 +493,8 @@ int8_t UserInterface::_MenuFieldUpdate(int8_t delta)
                 Serial.print(" WT5:");Serial.println(wtName);
 
                 _lcd.setCursor(0, 1);
-                snprintf(lcdLine1, LCD_LINE_LEN + 1, "#%02d %-12s", _writeTarget, wtName);
-                _lcd.print(lcdLine1);
+                snprintf(_lcd.line1, LCD_LINE_LEN + 1, "#%02d %-12s", _writeTarget, wtName);
+                _lcd.print(_lcd.line1);
                 _lcd.setCursor(_curPosition, 1);
             }
             break;
@@ -601,7 +601,7 @@ void UserInterface::_statePatchSettings(UiEvents_t events)
             _lcd.blink();
         }
 
-        if(events.ButtonEnc == BTN_LONG_PRESS)
+        if(events.ButtonEnc == BTN_LONG)
         {        
             _moveToState(INT_STATE_PATCH_SEL);        
         }
@@ -662,7 +662,7 @@ void UserInterface::_statePatchSettings(UiEvents_t events)
             }
         }
 #endif
-        if(events.ButtonEnc == BTN_LONG_PRESS)
+        if(events.ButtonEnc == BTN_LONG)
         {        
             Serial.println("VIEW");
             _menuSubstViewEdit = MENU_SUBST_VIEW;
