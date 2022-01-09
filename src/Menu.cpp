@@ -1,9 +1,9 @@
 #include "Menu.h"
 
-Menu::Menu(UserInterface* ui, Display* lcd)
+Menu::Menu(UserInterface* ui)
 {
-    _lcd = lcd;
     _owner = ui;
+    _lcd = &_owner->_lcd;
     _numScreens = 0;
     _curScreen = 0;
 }
@@ -28,7 +28,7 @@ int8_t Menu::registerScreen(uint16_t id, MenuScreen* screen, uint16_t numTabs)
     // Screen does not exists: add it to deck
     screen->setParent(this);
     screen->setNumTabs(numTabs);
-    screen->setCurTab(0);
+    screen->setFirstTab();
     _screens[_numScreens].id = id;
     _screens[_numScreens].screen = screen;
     Serial.print("after: "); Serial.println((unsigned long)_screens[_numScreens].screen, HEX);
@@ -58,75 +58,71 @@ int8_t Menu::setScreen(uint16_t id, uint16_t tab)
 
 int8_t Menu::setNextScreen(void)
 {
-    if(_curScreen == (_numScreens - 1))
-    {
-        // Last screen in deck - do nothing! (no wrapping policy)
-        return MENU_OK;
-    }
-
+    Serial.print("bef-curScreen:");Serial.print(_curScreen);
+    Serial.print(" bef-numScreens:");Serial.print(_numScreens);
 
     // Get info for current screen
     MenuScreen* scr = _screens[_curScreen].screen;
     int16_t nt = scr->getNumTabs();
     int16_t ct = scr->getCurTab();
 
-    if(nt > 0)
+    Serial.print(" bef-numTabs:");Serial.print(nt);
+    Serial.print(" bef-curTab:");Serial.println(ct);
+
+    if(ct < (nt - 1))    
     {
-        // Screen is tabbed
-        if(ct < (nt - 1))
-        {
-            // Not the last tab: change tab but not screen    
-            scr->setCurTab(++ct);
-        }
-        else
-        {
-            // Last tab: move to next screen (force first tab)
-            _curScreen++;
-            _screens[_curScreen].screen->setCurTab(0);
-        }
+        // Not the last tab: change tab but not screen    
+        scr->setCurTab(++ct);
     }
     else
     {
-        // Screen is not tabbed --> go to next
-        _curScreen++;
+        // Last tab -> move to next screen
+        if(_curScreen < (_numScreens - 1))
+        {            
+            // If this is not the last screen, go to next
+            _curScreen++;
+            _screens[_curScreen].screen->setFirstTab();                
+        }            
     }
+
+    Serial.print(" aft-curScreen:");Serial.print(_curScreen);
+    Serial.print(" aft-curTab:");Serial.println(scr->getCurTab());
 
     return MENU_OK;
 }
 
 int8_t Menu::setPrevScreen(void)
 {
-    if(_curScreen == 0)
-    {
-        // First screen in deck - do nothing! (no wrapping policy)
-        return MENU_OK;
-    }
+
+    Serial.print("bef-curScreen:");Serial.print(_curScreen);
+    Serial.print(" bef-numScreens:");Serial.print(_numScreens);
 
     // Get info for current screen
     MenuScreen* scr = _screens[_curScreen].screen;
     int16_t nt = scr->getNumTabs();
     int16_t ct = scr->getCurTab();
 
-    if(nt > 0)
+    Serial.print(" bef-numTabs:");Serial.print(nt);
+    Serial.print(" bef-curTab:");Serial.println(ct);
+
+    if(ct > 0)
     {
-        // Screen is tabbed
-        if(ct > 0)
-        {
-            // Not the last tab: change tab but not screen    
-            scr->setCurTab(--ct);
-        }
-        else
-        {
-            // Last tab: move to previous screen (force first tab)
-            _curScreen--;
-            _screens[_curScreen].screen->setCurTab(0);
-        }
+        // Not the last tab: change tab but not screen    
+        scr->setCurTab(--ct);
     }
     else
     {
-        // Screen is not tabbed --> go to previous
-        _curScreen--;
+        // First tab -> move to previous screen
+        if(_curScreen > 0)
+        {            
+            // Not the first screen already --> move to previous screen
+            _curScreen--;
+            _screens[_curScreen].screen->setLastTab();                
+        }                    
     }
+
+    Serial.print(" aft-curScreen:");Serial.print(_curScreen);
+    Serial.print(" aft-curTab:");Serial.println(scr->getCurTab());
 
     return MENU_OK;
 }
@@ -178,18 +174,32 @@ void Menu::updateScreen(int16_t delta)
 
     while (deltaAbs > 0)
     {
-        _screens[_curScreen].screen->updateScreen(deltaSign);        
+        _screens[_curScreen].screen->updateScreen(deltaSign);   
         deltaAbs--;
     }
 }
 
 void Menu::updateCursor(int16_t delta)
 {
-    _screens[_curScreen].screen->updateCursor(delta);    
+    Serial.print("bef-selPos:");Serial.print(_selPosition);
+    Serial.print(" bef-curPos:");Serial.print(_curPosition);
+    Serial.print(" delta:");Serial.print(delta);
+
+    _screens[_curScreen].screen->updateCursor(delta);
+
+    Serial.print(" aft-selPos:");Serial.print(_selPosition);
+    Serial.print(" aft-curPos:");Serial.println(_curPosition);
 }
 
 void Menu::updateValue(int16_t delta)
 {
+    Serial.print("bef-selPos:");Serial.print(_selPosition);
+    Serial.print(" bef-curPos:");Serial.print(_curPosition);
+    Serial.print(" delta:");Serial.print(delta);
+
     _screens[_curScreen].screen->updateValue(delta);
+
+    Serial.print(" aft-selPos:");Serial.print(_selPosition);
+    Serial.print(" aft-curPos:");Serial.println(_curPosition);
 }
 

@@ -70,7 +70,7 @@ public:
      * @param ui        : pointer to owner UserInterface instance
      * @param lcd       : pointer to display (used by menu for printing)
      */
-    Menu(UserInterface* ui, Display* lcd);
+    Menu(UserInterface* ui);
 
     /**
      * @brief Register menu screen and add it to deck
@@ -80,7 +80,7 @@ public:
      * @param numTabs   : for tabbed screens, number of tabs (default = 0, i.e. screen is not tabbed)
      * @return int8_t   : error code (see definitions above)
      */
-    int8_t registerScreen(uint16_t id, MenuScreen* screen, uint16_t numTabs = 0);
+    int8_t registerScreen(uint16_t id, MenuScreen* screen, uint16_t numTabs = 1);
 
     /**
      * @brief Get the number of registered screens
