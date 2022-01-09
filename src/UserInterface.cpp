@@ -152,26 +152,19 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
 
 void UserInterface::_printPatchInfo(Patch_t patch, bool isActive)
 {
-//    unsigned long time = millis();
+    sprintf(_lcd.line0, "%02d| %-12s", patch.num, patch.name);
 
-    // Print first line: patch number + name
-    _lcd.setCursor(0,0);
-    sprintf(_msgString, "%02d| %-12s", patch.num, patch.name);
-    _lcd.print(_msgString);
-
-    // Print second line: patch enable indicator, patch loopA/B & midi enable
-    _lcd.setCursor(0,1);
-    
     char tempA[5];
     char tempB[3];
-    char tempC[2];
     loopEnableToStr(patch.loopEnable, 3, 0, tempA);
     loopEnableToStr(patch.loopEnable, 6, 5, tempB);
-    sprintf(_msgString, "%s| A%s B%s M0", (isActive)?(" \x7E"):("  "), tempA, tempB);
-    _lcd.print(_msgString);
+    snprintf(_lcd.line1, LCD_LINE_LEN + 1, "%s| A%s B%s M0", (isActive)?(" \x7E"):("  "), tempA, tempB);
 
-//    unsigned long elapsed = millis() - time;
-//    Serial.println(elapsed);
+    _lcd.setCursor(0, 0);
+    _lcd.print(_lcd.line0);
+
+    _lcd.setCursor(0, 1);
+    _lcd.print(_lcd.line1);    
 
 #if DEBUG_PRINT_INTERFACE    
 
@@ -185,7 +178,7 @@ void UserInterface::_printPatchInfo(Patch_t patch, bool isActive)
     Serial.print(tempB);
 
     Serial.print(" M");
-    Serial.print(tempC);
+//    Serial.print(tempC);
 
     Serial.println();
 #endif

@@ -46,7 +46,7 @@ public:
     void refresh(UiEvents_t events);
 
     Patch_t _curPatch;
-    int8_t _writeTarget;
+    int8_t  _writeTarget;
     PatchManager* _patchMgr;
     Display _lcd;  // set the LCD address to 0x27 for a 16 chars and 2 line display
 
