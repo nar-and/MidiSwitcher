@@ -27,7 +27,6 @@
 class ScreenGsMidiIn : public MenuScreen
 {
     void show();
-    void updateScreen(int16_t delta);
     void updateCursor(int16_t delta);    
     void updateValue(int16_t delta);
 };

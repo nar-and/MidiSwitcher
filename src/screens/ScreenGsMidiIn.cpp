@@ -9,19 +9,6 @@ void ScreenGsMidiIn::show(void)
     snprintf(lcd->line1, LCD_LINE_LEN + 1, "Test            ");
 }
 
-void ScreenGsMidiIn::updateScreen(int16_t delta)
-{
-    if(delta > 0) 
-    {   
-        // Do nothing - last entry
-        _parent->setNextScreen();
-    }
-    else 
-    {
-        _parent->setPrevScreen();
-    }
-}
-
 void ScreenGsMidiIn::updateCursor(int16_t delta)
 {
     _parent->_selPosition = 0;
