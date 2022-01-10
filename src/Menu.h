@@ -26,20 +26,12 @@
 #include "UserInterface.h"
 #include "Display.h"
 
-
 // Max number of screens in menu
 #define MAX_NUM_SCREENS     10
 
 // Error codes for class methods
 #define MENU_OK                     0
 #define MENU_ERROR_GENERIC          -1
-
-
-typedef struct
-{
-    uint16_t    id;
-    MenuScreen* screen;    
-} MenuEntry_t;
 
 // Forward declaration of owner - needed to avoid circular dependencies
 class UserInterface;
@@ -50,7 +42,14 @@ class UserInterface;
  */
 class Menu 
 {
-private: 
+private:
+
+    typedef struct
+    {
+        uint16_t    id;
+        MenuScreen* screen;    
+    } MenuEntry_t;
+
     MenuEntry_t _screens[MAX_NUM_SCREENS];      // Deck of screens owned by menu    
     uint16_t    _numScreens;                    // Total number of registered screens 
     uint16_t    _curScreen;                     // Index of currently selected screen
@@ -77,63 +76,27 @@ public:
      * 
      * @param id        : screen identifier
      * @param screen    : pointer to screen instance
-     * @param numTabs   : for tabbed screens, number of tabs (default = 0, i.e. screen is not tabbed)
+     * @param numTabs   : for tabbed screens, number of tabs (default = 1, i.e. screen is not tabbed)
      * @return int8_t   : error code (see definitions above)
      */
     int8_t registerScreen(uint16_t id, MenuScreen* screen, uint16_t numTabs = 1);
 
-    /**
-     * @brief Get the number of registered screens
-     * 
-     * @return uint16_t : number of registered screens
-     */
-    uint16_t getNumScreens(void);
 
-    /**
-     * @brief Move to selected screen & tab
-     * 
-     * @param id        : target screen identifier
-     * @param tab       : target tab identifier
-     * @return int8_t   : error code (see definitions above)
-     */
+    // Move to selected screen (by ID) & tab
     int8_t setScreen(uint16_t id, uint16_t tab = 0);
     int8_t setNextScreen(void);
     int8_t setPrevScreen(void);
+    uint16_t getNumScreens(void);
 
-
-    /**
-     * @brief 
-     * 
-     */
     void show(void);
-
-    /**
-     * @brief 
-     * 
-     * @param delta
-     */
     void updateScreen(int16_t delta);
-
-    /**
-     * @brief 
-     * 
-     * @param delta
-     */
     void updateCursor(int16_t delta);
-
-    /**
-     * @brief 
-     * 
-     * @param delta 
-     */
     void updateValue(int16_t delta);
-
-
 
     int8_t _selPosition;
     int8_t _curPosition;
-    Display* _lcd;
     UserInterface* _owner;
+    Display* _lcd;
 };
 
 #endif // MENU_H

@@ -10,18 +10,16 @@ Menu::Menu(UserInterface* ui)
 
 int8_t Menu::registerScreen(uint16_t id, MenuScreen* screen, uint16_t numTabs)
 {
-    Serial.print("register > "); Serial.print(id);Serial.print("/"); Serial.println((unsigned long)screen, HEX);
-    Serial.print("_numScreens: ");Serial.println(_numScreens); 
     // Check if screen deck is already filled
     if(_numScreens >= MAX_NUM_SCREENS)
     {
         return MENU_ERROR_GENERIC;
     }
 
-    Serial.println("pre-lookup");
     // Does the screen already exist?
     if(_lookup(id) >= 0)
     {
+        // Yes: return error (cannot replace an existing screen)
         return MENU_ERROR_GENERIC;
     }
 
@@ -31,10 +29,8 @@ int8_t Menu::registerScreen(uint16_t id, MenuScreen* screen, uint16_t numTabs)
     screen->setFirstTab();
     _screens[_numScreens].id = id;
     _screens[_numScreens].screen = screen;
-    Serial.print("after: "); Serial.println((unsigned long)_screens[_numScreens].screen, HEX);
 
     _numScreens++;
-    
 
     return MENU_OK;
 }
@@ -58,16 +54,10 @@ int8_t Menu::setScreen(uint16_t id, uint16_t tab)
 
 int8_t Menu::setNextScreen(void)
 {
-    Serial.print("bef-curScreen:");Serial.print(_curScreen);
-    Serial.print(" bef-numScreens:");Serial.print(_numScreens);
-
     // Get info for current screen
     MenuScreen* scr = _screens[_curScreen].screen;
     int16_t nt = scr->getNumTabs();
     int16_t ct = scr->getCurTab();
-
-    Serial.print(" bef-numTabs:");Serial.print(nt);
-    Serial.print(" bef-curTab:");Serial.println(ct);
 
     if(ct < (nt - 1))    
     {
@@ -85,25 +75,15 @@ int8_t Menu::setNextScreen(void)
         }            
     }
 
-    Serial.print(" aft-curScreen:");Serial.print(_curScreen);
-    Serial.print(" aft-curTab:");Serial.println(scr->getCurTab());
-
     return MENU_OK;
 }
 
 int8_t Menu::setPrevScreen(void)
 {
-
-    Serial.print("bef-curScreen:");Serial.print(_curScreen);
-    Serial.print(" bef-numScreens:");Serial.print(_numScreens);
-
     // Get info for current screen
     MenuScreen* scr = _screens[_curScreen].screen;
     int16_t nt = scr->getNumTabs();
     int16_t ct = scr->getCurTab();
-
-    Serial.print(" bef-numTabs:");Serial.print(nt);
-    Serial.print(" bef-curTab:");Serial.println(ct);
 
     if(ct > 0)
     {
@@ -120,9 +100,6 @@ int8_t Menu::setPrevScreen(void)
             _screens[_curScreen].screen->setLastTab();                
         }                    
     }
-
-    Serial.print(" aft-curScreen:");Serial.print(_curScreen);
-    Serial.print(" aft-curTab:");Serial.println(scr->getCurTab());
 
     return MENU_OK;
 }
@@ -149,13 +126,12 @@ int16_t Menu::_lookup(uint16_t id)
         indx++;
     }
 
-    Serial.print("lookup: "); Serial.println(scrIndx);
-
     return scrIndx;
 }
 
 void Menu::show(void)
 {
+    // Ask current menu screen to fill LCD lines to be printed
     _screens[_curScreen].screen->show();
 
     // Print to screen
@@ -172,8 +148,11 @@ void Menu::updateScreen(int16_t delta)
     int16_t deltaAbs = (delta >= 0)?(delta):(-delta);
     int16_t deltaSign = (delta >= 0)?(+1):(-1);
 
+    // For each single user input request...
     while (deltaAbs > 0)
     {
+        // ... propagate it to current menu screen so that next screen 
+        // can be appropriately selected
         _screens[_curScreen].screen->updateScreen(deltaSign);   
         deltaAbs--;
     }
@@ -181,25 +160,11 @@ void Menu::updateScreen(int16_t delta)
 
 void Menu::updateCursor(int16_t delta)
 {
-    Serial.print("bef-selPos:");Serial.print(_selPosition);
-    Serial.print(" bef-curPos:");Serial.print(_curPosition);
-    Serial.print(" delta:");Serial.print(delta);
-
     _screens[_curScreen].screen->updateCursor(delta);
-
-    Serial.print(" aft-selPos:");Serial.print(_selPosition);
-    Serial.print(" aft-curPos:");Serial.println(_curPosition);
 }
 
 void Menu::updateValue(int16_t delta)
 {
-    Serial.print("bef-selPos:");Serial.print(_selPosition);
-    Serial.print(" bef-curPos:");Serial.print(_curPosition);
-    Serial.print(" delta:");Serial.print(delta);
-
     _screens[_curScreen].screen->updateValue(delta);
-
-    Serial.print(" aft-selPos:");Serial.print(_selPosition);
-    Serial.print(" aft-curPos:");Serial.println(_curPosition);
 }
 
