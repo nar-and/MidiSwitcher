@@ -53,8 +53,8 @@
 #define MIDI_TYPE_PC        1
 #define MIDI_TYPE_CC        2
 
-#define MAX_NUM_MIDI_OUT       4
-#define MAX_NUM_MIDI_IN        6
+#define MAX_NUM_MIDI_OUT    4
+#define MAX_NUM_MIDI_IN     6
 
 /*-----------------------------------*
  * PUBLIC MACROS

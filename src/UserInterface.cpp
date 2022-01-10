@@ -93,17 +93,11 @@ void UserInterface::refresh(UiEvents_t events)
     }
 }
 
-/**
- * @brief 
- * 
- * @param state 
- */
 void UserInterface::_moveToState(uint8_t state)
 {
     _curState = state;
     _onEnter = true;
 }
-
 
 void UserInterface::_statePatchSelect(UiEvents_t events)
 {
@@ -111,25 +105,37 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
 
     if(_onEnter)
     {
+        // ** On entering the state: initialize patch visualization **
         _onEnter = false;
+
+        // Display info about currently selected patch
         _patchMgr->getSelectedPatch(&patch);
         _printPatchInfo(patch, _patchMgr->isSelActive());
     }
 
     if(events.EncDelta != 0)
     {           
-        // Read new patch
+        // ** On knob rotation: change patch selection (without activating it) ** 
+        // Update patch selection
         _patchMgr->updateSelection(events.EncDelta);
+
+        // Display info about newly selected patch
         _patchMgr->getSelectedPatch(&patch);
         _printPatchInfo(patch, _patchMgr->isSelActive());
     }
 
     if(events.ButtonEnc == BTN_CLICK)
     {
-        // Activate selected patch (if different than currently active patch)
+        // ** On button click: activate currently selected patch **        
         if(_patchMgr->isSelActive() == false)
         {
+            // Activate selected patch only if not already active 
+            // (avoids retriggering relay actions)
             _patchMgr->activateSelectedPatch();
+            
+            // TODO: add activation!!
+
+            // Update info showing that patch is now active
             _patchMgr->getActivePatch(&patch);
             _printPatchInfo(patch, _patchMgr->isSelActive());
         }
@@ -137,14 +143,15 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
 
     if(events.ButtonEnc == BTN_LONG)
     {
+        // ** On button long press: go to settings menu **        
         if(_patchMgr->isSelActive())
         {   
-            // Enable edit mode only if currently shown patch is the active one
+            // Currently selected patch is active --> move to patch settings menu
             _moveToState(INT_STATE_PATCH_SETTINGS);
         }
         else
         {   
-            //... otherwise move to global settings
+            // Currently selected patch is NOT active --> move to global settings menu
             _moveToState(INT_STATE_GLOBAL_SETTINGS);
         }
     }
@@ -189,96 +196,114 @@ void UserInterface::_statePatchSettings(UiEvents_t events)
 {
     if(_onEnter)
     {
+        // ** On entering the state: initialize settings menu **
         _onEnter = false;
+
+        // Read active patch for further processing
         _patchMgr->getActivePatch(&_curPatch);
 
-        _menuSubstViewEdit = MENU_SUBST_VIEW;
+        // Start settings menu in view mode (i.e. patch info browsing, not editing)
+        _menuMode = MENU_MODE_VIEW;
 
+        // Move to first menu screen
         _patchSettingsMenu->setScreen(MENU_PS_LOOP_A_ENABLE);
         _lcd.clear();
         _patchSettingsMenu->show();
     }
 
-    if(_menuSubstViewEdit == MENU_SUBST_VIEW)
+    if(_menuMode == MENU_MODE_VIEW)
     {
+        // ** Menu VIEW mode **
         if(events.EncDelta != 0)
         {
+            // ** On knob rotation: change menu screen ** 
             _patchSettingsMenu->updateScreen(events.EncDelta);
             _patchSettingsMenu->show();
         }
 
         if(events.ButtonEnc == BTN_CLICK)
         {
-            // Move to EDIT substate
-            Serial.println("EDIT");
+            // ** On button click: move to EDIT mode **
+            _menuMode = MENU_MODE_EDIT;
 
+            // Reset book-keeping variables
             _writeTarget = -1;
-            _menuSubstViewEdit = MENU_SUBST_EDIT;
             _patchSettingsMenu->_selPosition = 0;
 
-            _patchSettingsMenu->updateCursor(0);
+            // Highlight first field to be edited with blinking cursor
+            _patchSettingsMenu->updateCursor(0);            
             _lcd.setCursor(_patchSettingsMenu->_curPosition, 1);
             _lcd.blink();
         }
 
         if(events.ButtonEnc == BTN_LONG)
         {   
+            // ** On button long press: go back to patch selection **
             _moveToState(INT_STATE_PATCH_SEL);        
         }
     }
     else
     {
+        // ** Menu EDIT mode **        
         if(events.ButtonEnc == BTN_CLICK)
         {
-            Serial.println("MOVE");
+            // ** On button click: move to next field **
             _patchSettingsMenu->updateCursor(1);
             _lcd.setCursor(_patchSettingsMenu->_curPosition, 1);
         }
 
         if(events.EncDelta != 0)
         {
-            Serial.println("UPDATE");  
+            // ** On knob rotation: change field value ** 
             _patchSettingsMenu->updateValue(events.EncDelta);
         }
 
         if(events.ButtonEnc == BTN_LONG)
         {        
-            Serial.println("VIEW");
-            _menuSubstViewEdit = MENU_SUBST_VIEW;
+            // ** On button long press: go back to VIEW mode **
+            _menuMode = MENU_MODE_VIEW;
+
+            // Turn off blinking cursor
             _lcd.noBlink();
         }
     }
 }
 
-
-
 void UserInterface::_stateGlobalSettings(UiEvents_t events)
 {
     if(_onEnter)
     {
+        // ** On entering the state: initialize settings menu **        
         _onEnter = false;
-        _menuSubstViewEdit = MENU_SUBST_VIEW;
 
+        // Start settings menu in view mode (i.e. patch info browsing, not editing)
+        _menuMode = MENU_MODE_VIEW;
+
+        // Move to first menu screen
         _globalSettingsMenu->setScreen(MENU_GS_MIDI_IN);
         _lcd.clear();
         _globalSettingsMenu->show();
     }
 
-    if(_menuSubstViewEdit == MENU_SUBST_VIEW)
+    if(_menuMode == MENU_MODE_VIEW)
     {
+        // ** Menu VIEW mode **
         if(events.EncDelta != 0)
         {
+            // ** On knob rotation: change menu screen ** 
             _globalSettingsMenu->updateScreen(events.EncDelta);
             _globalSettingsMenu->show();
         }
 
         if(events.ButtonEnc == BTN_CLICK)
         {
-            // Move to EDIT substate
-            Serial.println("EDIT");
-            _menuSubstViewEdit = MENU_SUBST_EDIT;
+            // ** On button click: move to EDIT mode **
+            _menuMode = MENU_MODE_EDIT;
+
+            // Reset book-keeping variables            
             _globalSettingsMenu->_selPosition = 0;
 
+            // Highlight first field to be edited with blinking cursor
             _globalSettingsMenu->updateCursor(0);
             _lcd.setCursor(_globalSettingsMenu->_curPosition, 1);
             _lcd.blink();
@@ -286,28 +311,32 @@ void UserInterface::_stateGlobalSettings(UiEvents_t events)
 
         if(events.ButtonEnc == BTN_LONG)
         {   
+            // ** On button long press: go back to patch selection **
             _moveToState(INT_STATE_PATCH_SEL);        
         }
     }
     else
     {
+        // ** Menu EDIT mode **
         if(events.ButtonEnc == BTN_CLICK)
         {
-            Serial.println("MOVE");
+            // ** On button click: move to next field **
             _globalSettingsMenu->updateCursor(1);
             _lcd.setCursor(_globalSettingsMenu->_curPosition, 1);
         }
 
         if(events.EncDelta != 0)
         {
-            Serial.println("UPDATE");  
+            // ** On knob rotation: change field value ** 
             _globalSettingsMenu->updateValue(events.EncDelta);
         }
 
         if(events.ButtonEnc == BTN_LONG)
         {        
-            Serial.println("VIEW");
-            _menuSubstViewEdit = MENU_SUBST_VIEW;
+            // ** On button long press: go back to VIEW mode **
+            _menuMode = MENU_MODE_VIEW;
+
+            // Turn off blinking cursor
             _lcd.noBlink();
         }
     }
