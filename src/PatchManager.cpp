@@ -193,17 +193,19 @@ int8_t PatchManager::_loadLibrary(void)
         snprintf(tmp, 16, "%d LPEN%02x", i, _library[i].loopEnable);
         Serial.println(tmp);
 
-        _library[i].midiOut[0] = {MIDI_TYPE_PC, i, i+1, 0};
-        _library[i].midiOut[1] = {MIDI_TYPE_CC, i, i+2, i+3};
-        _library[i].midiOut[2] = {MIDI_TYPE_NONE, i, i+4, i+5};
-        _library[i].midiOut[3] = {MIDI_TYPE_CC, i, i+6, i+7};
+        for(int j = 0; j < MAX_NUM_MIDI_OUT; j++)
+        {
+            _library[i].midiOut[j] = {j % 3, j + 1, j + 2, j + 3};
+            Serial.print("O");Serial.print(j);Serial.print(":");
+            Serial.print(_library[i].midiOut[j].type);Serial.println(_library[i].midiOut[j].chan);
+        }
 
-        _library[i].midiIn[0] = {MIDI_TYPE_PC, i, i+1, 0};
-        _library[i].midiIn[1] = {MIDI_TYPE_PC, i, i+2, 0};
-        _library[i].midiIn[2] = {MIDI_TYPE_NONE, i, i+4, i+5};
-        _library[i].midiIn[3] = {MIDI_TYPE_NONE, i, i+4, i+5};
-        _library[i].midiIn[4] = {MIDI_TYPE_PC, i, i+3, 0};
-        _library[i].midiIn[5] = {MIDI_TYPE_PC, i, i+4, 0};
+        for(int j = 0; j < MAX_NUM_MIDI_IN; j++)
+        {
+            _library[i].midiIn[j] = {j % 2, j + 4, j + 5, j + 6};
+            Serial.print("I");Serial.print(j);Serial.print(":");
+            Serial.print(_library[i].midiIn[j].type);Serial.println(_library[i].midiIn[j].chan);
+        }
     }
 
     return PATCHMGR_OK;

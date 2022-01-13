@@ -54,7 +54,7 @@
 #define MIDI_TYPE_CC        2
 
 #define MAX_NUM_MIDI_OUT    4
-#define MAX_NUM_MIDI_IN     6
+#define MAX_NUM_MIDI_IN     4
 
 /*-----------------------------------*
  * PUBLIC MACROS
@@ -67,8 +67,8 @@
 
 typedef struct
 {
-    uint8_t type;       // NONE/PC/CC
-    uint8_t chan;
+    uint8_t type : 4;       // We will only use NONE/PC/CC but keep 4 bits for additional messages if needed 
+    uint8_t chan : 4;       // 0...15 according to MIDI format definition
     uint8_t num;
     uint8_t val;
 } MidiMsg_t;
