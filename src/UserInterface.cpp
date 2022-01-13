@@ -52,8 +52,8 @@ void UserInterface::init(PatchManager* pm)
     _patchSettingsMenu->registerScreen(MENU_PS_LOOP_A_MUTE, new ScreenPsLoopMute(LOOP_ID_A));
     _patchSettingsMenu->registerScreen(MENU_PS_LOOP_B_ENABLE, new ScreenPsLoopEn(LOOP_ID_B));
     _patchSettingsMenu->registerScreen(MENU_PS_LOOP_B_MUTE, new ScreenPsLoopMute(LOOP_ID_B));
-    _patchSettingsMenu->registerScreen(MENU_PS_MIDI_OUT, new ScreenPsMidi(MIDI_DIR_OUT), 4);
-    _patchSettingsMenu->registerScreen(MENU_PS_MIDI_IN, new ScreenPsMidi(MIDI_DIR_IN), 6);
+    _patchSettingsMenu->registerScreen(MENU_PS_MIDI_OUT, new ScreenPsMidi(MIDI_DIR_OUT), MAX_NUM_MIDI_OUT);
+    _patchSettingsMenu->registerScreen(MENU_PS_MIDI_IN, new ScreenPsMidi(MIDI_DIR_IN), MAX_NUM_MIDI_IN);
     _patchSettingsMenu->registerScreen(MENU_PS_NAME, new ScreenPsName());
     _patchSettingsMenu->registerScreen(MENU_PS_WRITE_COPY, new ScreenPsWriteCopy());
     _patchSettingsMenu->registerScreen(MENU_PS_WRITE_CONFIRM, new ScreenPsWriteConfirm());

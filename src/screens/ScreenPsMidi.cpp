@@ -12,14 +12,18 @@ ScreenPsMidi::ScreenPsMidi(uint8_t dir)
 void ScreenPsMidi::show(void)
 {
     Display* lcd = _parent->_lcd;
-    Patch_t curPatch = _parent->_owner->_curPatch;
+    Patch_t* curPatch = &_parent->_owner->_curPatch;
 
     char tabStr[9];
     getTabStr(_curTab, _numTabs, tabStr);
 
     snprintf(lcd->line0, LCD_LINE_LEN + 1, "MIDI %-3s%+8s", (_midiDir == MIDI_DIR_OUT)?("Out"):("In "), tabStr);
-    //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| MIDI Out [%d]", curPatch.num, _midiOutIndx);            
-    printMidiMsg(lcd->line1, LCD_LINE_LEN + 1, curPatch.midiOut[_curTab]);
+    //snprintf(_lcd.line0, LCD_LINE_LEN + 1, "%02d| MIDI Out [%d]", curPatch.num, _midiOutIndx);         
+
+    MidiMsg_t msg = (_midiDir == MIDI_DIR_OUT)?
+                            (curPatch->midiOut[_curTab]):
+                            (curPatch->midiIn[_curTab]);
+    printMidiMsg(lcd->line1, LCD_LINE_LEN + 1, msg);
 }
 
 void ScreenPsMidi::updateCursor(int16_t delta)
