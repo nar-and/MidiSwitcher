@@ -28,6 +28,7 @@ void ScreenPsMidi::show(void)
 
 void ScreenPsMidi::updateCursor(int16_t delta)
 {
+    // TODO: if MIDI IN, only allow OFF & PC
     int8_t fieldPos;                
     int8_t midiCurPos[] = {0, 3, 7, 12};
     Patch_t curPatch = _parent->_owner->_curPatch;
@@ -58,6 +59,7 @@ void ScreenPsMidi::updateCursor(int16_t delta)
 
 void ScreenPsMidi::updateValue(int16_t delta)
 {
+    // TODO: if MIDI IN, only allow OFF & PC
     Display* lcd = _parent->_lcd;
     Patch_t* curPatch = &_parent->_owner->_curPatch;
 
