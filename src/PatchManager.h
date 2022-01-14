@@ -22,6 +22,7 @@
  * INCLUDE FILES
  *-----------------------------------*/
 #include <stdint.h>
+#include "KeyValueTable.h"
 
 /*-----------------------------------*
  * PUBLIC DEFINES
@@ -130,6 +131,7 @@ private:
     int16_t _activeIndx = 0;
     uint16_t _libraryIndx = 0;
     Patch_t  _library[PATCH_LIBRARY_LEN];
+    KeyValueTable _midiInTriggers;
 
     int8_t _loadLibrary();    
 };

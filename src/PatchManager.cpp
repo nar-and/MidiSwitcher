@@ -195,18 +195,31 @@ int8_t PatchManager::_loadLibrary(void)
 
         for(int j = 0; j < MAX_NUM_MIDI_OUT; j++)
         {
-            _library[i].midiOut[j] = {j % 3, j + 1, j + 2, j + 3};
+            MidiMsg_t msg = {j % 3, j + 1, j + 2, j + 3};
+            _library[i].midiOut[j] = msg;
             Serial.print("O");Serial.print(j);Serial.print(":");
-            Serial.print(_library[i].midiOut[j].type);Serial.println(_library[i].midiOut[j].chan);
+            Serial.print(msg.type);Serial.println(msg.chan);
         }
 
         for(int j = 0; j < MAX_NUM_MIDI_IN; j++)
         {
-            _library[i].midiIn[j] = {j % 2, j + 4, j + 5, j + 6};
+            MidiMsg_t msg = {j % 2, i % 4, (i * MAX_NUM_MIDI_IN) + j, 0};
+            _library[i].midiIn[j] = msg;
+
+            if(msg.type == MIDI_TYPE_PC)
+            {
+                // Add message to MIDI In trigger list
+                uint16_t key = (uint16_t)((msg.chan << 8) | msg.num);
+                _midiInTriggers.put(key, i);
+            }
+
             Serial.print("I");Serial.print(j);Serial.print(":");
-            Serial.print(_library[i].midiIn[j].type);Serial.println(_library[i].midiIn[j].chan);
+            Serial.print(msg.type);Serial.println(msg.chan);
         }
     }
+
+    // Print MIDI IN triggers 
+    _midiInTriggers.print();        
 
     return PATCHMGR_OK;
 }
