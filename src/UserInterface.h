@@ -65,9 +65,6 @@ private:
     // Helpers
     void _printPatchInfo(Patch_t patch, bool isActive);
    
-    // Used to print structured messages with sprintf()
-    char _msgString[128];
-
     // Menu management
     uint8_t _menuMode;
     Menu* _globalSettingsMenu;          // Global settings menu management

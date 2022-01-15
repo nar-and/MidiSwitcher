@@ -20,6 +20,8 @@
 #include <Arduino.h>        // All Arduino functions (Serial etc.) 
 #include "UserInput.h"
 #include "UserInterface.h"
+#include "libs/MIDI_Library/MIDI.h"
+#include "InterfaceUtils.h"
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DEFINITIONS
@@ -56,13 +58,22 @@
  * Usage notes:
  * None
  *--------------------------------------------------------------------------*/
-// None
+static void handleControlChange(byte channel, byte number, byte value);
+static void handleProgramChange(byte channel, byte number);
 
 /*-----------------------------------*
  * PRIVATE VARIABLES
  *-----------------------------------*/
 static PatchManager patchMgr;
 static UserInterface interface;
+MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
+
+static MidiMsg_t lastMidiInMsg;
+static bool midiInMsgReceived;
+
+// Used to print structured messages with sprintf()
+static char _msgString[50];
+
 
 /*-----------------------------------*
  * PUBLIC FUNCTION DEFINITIONS
@@ -104,6 +115,17 @@ void AppSetup(void)
 
     patchMgr.init();
     interface.init(&patchMgr);
+
+    // Initialize MIDI communications, listen to all channels
+    midiInMsgReceived = false;
+
+    MIDI.setHandleProgramChange(handleProgramChange);
+    MIDI.setHandleControlChange(handleControlChange);
+
+    // TODO: add input channel filtering based on global settings
+    //MIDI.begin(MIDI_CHANNEL_OMNI);
+    MIDI.begin(1);
+    MIDI.turnThruOff();     // Disable soft thru
 }
 
 bool testStatus = false;
@@ -116,6 +138,17 @@ bool testStatus = false;
  *--------------------------------------------------------------------------*/
 void AppLoop(void)
 {
+    // Call MIDI.read the fastest you can for real-time performance.
+    MIDI.read();
+    
+    if(midiInMsgReceived)
+    {        
+        midiInMsgReceived = false;
+        // TODO: deal with MIDI IN messages        
+        printMidiMsg(_msgString, 20, lastMidiInMsg);
+        Serial.println(_msgString);
+    }
+
     // Read user inputs
     UiEvents_t events = UserInputRead();
 
@@ -145,6 +178,7 @@ void AppLoop(void)
 #endif
     }
 
+
     // Process user inputs
     interface.refresh(events);
 }
@@ -158,6 +192,17 @@ void AppLoop(void)
  * Implementation notes:
  * None
  *--------------------------------------------------------------------------*/
+void handleControlChange(byte channel, byte number, byte value)
+{
+    lastMidiInMsg = {MIDI_TYPE_CC, channel, number, value};
+    midiInMsgReceived = true;
+}
+
+void handleProgramChange(byte channel, byte number)
+{
+    lastMidiInMsg = {MIDI_TYPE_PC, channel, number, 0};
+    midiInMsgReceived = true;
+}
 
 /****************************************************************************
  ****************************************************************************/
