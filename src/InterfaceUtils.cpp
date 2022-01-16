@@ -18,6 +18,7 @@
 #include <stdio.h>          // NULL, sprintf definitions
 #include <string.h>
 #include "InterfaceUtils.h"
+#include <Arduino.h>
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DEFINITIONS
@@ -124,6 +125,18 @@ void printMidiMsg(char* buf, int maxLen, MidiMsg_t msg)
     {
         //snprintf(buf, maxLen, "CC#%03d V%03d Ch%02d", msg.num, msg.val, msg.chan);
         snprintf(buf, maxLen, "CC C%02d #%03d V%03d", msg.chan, msg.num, msg.val);
+    }
+}
+
+void printMidiInChan(char* buf, int maxLen, uint8_t chan)
+{
+    if(chan == MIDI_IN_CHAN_OMNI)
+    {
+        snprintf(buf, maxLen, "All");
+    }
+    else
+    {
+        snprintf(buf, maxLen, "%-3d", chan + 1);
     }
 }
 

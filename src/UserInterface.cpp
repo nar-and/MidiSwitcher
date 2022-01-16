@@ -105,12 +105,22 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
 
     if(_onEnter)
     {
-        // ** On entering the state: initialize patch visualization **
+        // ** On entering the state: set currently active patch **
         _onEnter = false;
+
+        // TODO: set patch
+        // Move switches
+        // Send out MIDI messages
 
         // Display info about currently selected patch
         _patchMgr->getSelectedPatch(&patch);
         _printPatchInfo(patch, _patchMgr->isSelActive());
+    }
+
+    {
+        // TODO: if MIDI in message has been received
+        // Check it RX message triggers a patch change
+        // If so, activate new patch and update visualization
     }
 
     if(events.EncDelta != 0)
@@ -211,6 +221,10 @@ void UserInterface::_statePatchSettings(UiEvents_t events)
         _patchSettingsMenu->show();
     }
 
+    {
+        // TODO: if MIDI in message has been received: IGNORE IT
+    }
+
     if(_menuMode == MENU_MODE_VIEW)
     {
         // ** Menu VIEW mode **
@@ -276,6 +290,9 @@ void UserInterface::_stateGlobalSettings(UiEvents_t events)
         // ** On entering the state: initialize settings menu **        
         _onEnter = false;
 
+        // Read global settings for further processing
+        _patchMgr->getGlobalSettings(&_globalSettings);
+
         // Start settings menu in view mode (i.e. patch info browsing, not editing)
         _menuMode = MENU_MODE_VIEW;
 
@@ -283,6 +300,10 @@ void UserInterface::_stateGlobalSettings(UiEvents_t events)
         _globalSettingsMenu->setScreen(MENU_GS_MIDI_IN);
         _lcd.clear();
         _globalSettingsMenu->show();
+    }
+
+    {
+        // TODO: if MIDI in message has been received: IGNORE IT
     }
 
     if(_menuMode == MENU_MODE_VIEW)
