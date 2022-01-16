@@ -32,6 +32,8 @@ void ScreenGsMidiIn::updateValue(int16_t delta)
     int8_t chan = gs->midiInChannel + delta;
     gs->midiInChannel = constrain(chan, 0, MIDI_IN_CHAN_OMNI);
 
+    // TODO: Changes to be enforced with setInputChannel()
+
     char chanStr[4];
     printMidiInChan(chanStr, 4, gs->midiInChannel);
     lcd->print(chanStr);

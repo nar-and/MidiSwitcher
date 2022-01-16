@@ -133,6 +133,7 @@ public:
 
     bool isSelActive(void);
     int8_t getGlobalSettings(GlobalSettings_t* settings);
+    bool checkMidiInTrigger(MidiMsg_t msg, uint8_t* targetPatch);
 
 private:
     int16_t _selectedIndx = 0;

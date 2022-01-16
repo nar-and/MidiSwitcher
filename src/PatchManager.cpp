@@ -172,6 +172,11 @@ int8_t PatchManager::getGlobalSettings(GlobalSettings_t* settings)
     return PATCHMGR_OK;
 }
 
+bool PatchManager::checkMidiInTrigger(MidiMsg_t msg, uint8_t* targetPatch)
+{
+    uint16_t key = (uint16_t)((msg.chan << 8) | msg.num);
+    return _midiInTriggers.get(key, targetPatch);
+}
 
 /*-----------------------------------*
  * PRIVATE FUNCTION DEFINITIONS
