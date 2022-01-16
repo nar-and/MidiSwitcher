@@ -54,6 +54,10 @@
 #define MIDI_TYPE_PC        1
 #define MIDI_TYPE_CC        2
 
+// Standard MIDI channels = 0...15
+// OMNI = listen from all channels 
+#define MIDI_IN_CHAN_OMNI   16
+
 #define MAX_NUM_MIDI_OUT    4
 #define MAX_NUM_MIDI_IN     4
 
@@ -74,7 +78,6 @@ typedef struct
     uint8_t val;
 } MidiMsg_t;
 
-
 typedef struct
 {
     uint8_t num;
@@ -83,6 +86,11 @@ typedef struct
     MidiMsg_t midiOut[MAX_NUM_MIDI_OUT];
     MidiMsg_t midiIn[MAX_NUM_MIDI_IN];
 } Patch_t;
+
+typedef struct 
+{
+    uint8_t midiInChannel;      
+} GlobalSettings_t;
 
 /*-----------------------------------*
  * PUBLIC VARIABLE DECLARATIONS
@@ -124,7 +132,7 @@ public:
     int8_t getPatchName(uint16_t indx, char* name);
 
     bool isSelActive(void);
-
+    int8_t getGlobalSettings(GlobalSettings_t* settings);
 
 private:
     int16_t _selectedIndx = 0;
@@ -132,8 +140,9 @@ private:
     uint16_t _libraryIndx = 0;
     Patch_t  _library[PATCH_LIBRARY_LEN];
     KeyValueTable _midiInTriggers;
+    GlobalSettings_t _globalSettings;
 
-    int8_t _loadLibrary();    
+    int8_t _loadData();    
 };
 #endif // PATCH_MANAGER_H
 

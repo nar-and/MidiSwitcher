@@ -72,8 +72,8 @@
  *--------------------------------------------------------------------------*/
 int8_t PatchManager::init(void)
 {
-    // Load patch library from EEPROM
-    _loadLibrary();
+    // Load data (patch library, global settings) from EEPROM
+    _loadData();
     return PATCHMGR_OK;
 }
 
@@ -165,6 +165,14 @@ bool PatchManager::isSelActive(void)
     return (_selectedIndx == _activeIndx);
 }
 
+int8_t PatchManager::getGlobalSettings(GlobalSettings_t* settings)
+{
+    *settings = _globalSettings;
+
+    return PATCHMGR_OK;
+}
+
+
 /*-----------------------------------*
  * PRIVATE FUNCTION DEFINITIONS
  *-----------------------------------*/
@@ -174,10 +182,14 @@ bool PatchManager::isSelActive(void)
  * Implementation notes:
  * None
  *--------------------------------------------------------------------------*/
-int8_t PatchManager::_loadLibrary(void)
+int8_t PatchManager::_loadData(void)
 {
-    char buf[PATCH_NAME_LEN + 1];
     // TODO: load from EEPROM
+
+    // DUMMY DATA LOAD FOR TESTING
+    _globalSettings.midiInChannel = MIDI_IN_CHAN_OMNI;
+
+    char buf[PATCH_NAME_LEN + 1];
     for(int i = 0; i < PATCH_LIBRARY_LEN; i++)
     {   
         // INITIALIZE WITH DUMMY DATA FOR TESTING

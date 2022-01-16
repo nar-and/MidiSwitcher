@@ -122,9 +122,15 @@ void AppSetup(void)
     MIDI.setHandleProgramChange(handleProgramChange);
     MIDI.setHandleControlChange(handleControlChange);
 
-    // TODO: add input channel filtering based on global settings
-    //MIDI.begin(MIDI_CHANNEL_OMNI);
-    MIDI.begin(1);
+    // Read channel filter from settings
+    GlobalSettings_t gs;
+    patchMgr.getGlobalSettings(&gs);
+
+    // TODO: align definitions between global settings and MIDI library
+    uint8_t inChan = (gs.midiInChannel == MIDI_IN_CHAN_OMNI) ? 
+                     (MIDI_CHANNEL_OMNI):
+                     (gs.midiInChannel + 1);
+    MIDI.begin(inChan);
     MIDI.turnThruOff();     // Disable soft thru
 }
 
