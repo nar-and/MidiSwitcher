@@ -1,4 +1,4 @@
-#include "UserInterface.h"
+#include "SwitcherLogic.h"
 #include "PatchManager.h"
 #include <Arduino.h>
 #include "screens/ScreenGsMidiIn.h"
@@ -18,7 +18,7 @@
  * @brief Construct a new User Interface:: User Interface object
  * 
  */
-UserInterface::UserInterface() : 
+SwitcherLogic::SwitcherLogic() : 
     _lcd(LCD_ADDRESS, LCD_LINE_LEN, LCD_NUM_LINES)
 {
     _globalSettingsMenu = new Menu(this);
@@ -30,7 +30,7 @@ UserInterface::UserInterface() :
  * 
  * @param pm 
  */
-void UserInterface::init(PatchManager* pm)
+void SwitcherLogic::init(PatchManager* pm)
 {
     _patchMgr = pm;
 
@@ -72,20 +72,20 @@ void UserInterface::init(PatchManager* pm)
  * 
  * @param events 
  */
-void UserInterface::refresh(UiEvents_t events)
+void SwitcherLogic::refresh(UiEvents_t events, MidiMsg_t rxMsg)
 {
     switch(_curState)
     {
         case INT_STATE_PATCH_SEL:
-            _statePatchSelect(events);
+            _statePatchSelect(events, rxMsg);
             break;
 
         case INT_STATE_PATCH_SETTINGS:
-            _statePatchSettings(events);
+            _statePatchSettings(events, rxMsg);
             break;
 
         case INT_STATE_GLOBAL_SETTINGS:
-            _stateGlobalSettings(events);
+            _stateGlobalSettings(events, rxMsg);
             break;
 
         default:
@@ -93,13 +93,13 @@ void UserInterface::refresh(UiEvents_t events)
     }
 }
 
-void UserInterface::_moveToState(uint8_t state)
+void SwitcherLogic::_moveToState(uint8_t state)
 {
     _curState = state;
     _onEnter = true;
 }
 
-void UserInterface::_statePatchSelect(UiEvents_t events)
+void SwitcherLogic::_statePatchSelect(UiEvents_t events, MidiMsg_t rxMsg)
 {
     Patch_t patch;
 
@@ -110,17 +110,28 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
 
         // TODO: set patch
         // Move switches
-        // Send out MIDI messages
+        // Send out related MIDI messages
 
         // Display info about currently selected patch
         _patchMgr->getSelectedPatch(&patch);
         _printPatchInfo(patch, _patchMgr->isSelActive());
     }
 
+    if(rxMsg.type != MIDI_TYPE_NONE)
     {
-        // TODO: if MIDI in message has been received
-        // Check it RX message triggers a patch change
-        // If so, activate new patch and update visualization
+        // Check if RX message triggers a patch change
+        uint8_t targetPatch;
+        if(_patchMgr->checkMidiInTrigger(rxMsg, &targetPatch))
+        {
+            // If so, activate new patch and update visualization
+            _patchMgr->activatePatch(targetPatch);
+
+            // TODO: add activation!!
+
+            // Update info showing that patch is now active
+            _patchMgr->getActivePatch(&patch);
+            _printPatchInfo(patch, _patchMgr->isSelActive());
+        }
     }
 
     if(events.EncDelta != 0)
@@ -167,7 +178,7 @@ void UserInterface::_statePatchSelect(UiEvents_t events)
     }
 }
 
-void UserInterface::_printPatchInfo(Patch_t patch, bool isActive)
+void SwitcherLogic::_printPatchInfo(Patch_t patch, bool isActive)
 {
     sprintf(_lcd.line0, "%02d| %-12s", patch.num, patch.name);
 
@@ -202,7 +213,7 @@ void UserInterface::_printPatchInfo(Patch_t patch, bool isActive)
 }
 
 
-void UserInterface::_statePatchSettings(UiEvents_t events)
+void SwitcherLogic::_statePatchSettings(UiEvents_t events, MidiMsg_t rxMsg)
 {
     if(_onEnter)
     {
@@ -283,7 +294,7 @@ void UserInterface::_statePatchSettings(UiEvents_t events)
     }
 }
 
-void UserInterface::_stateGlobalSettings(UiEvents_t events)
+void SwitcherLogic::_stateGlobalSettings(UiEvents_t events, MidiMsg_t rxMsg)
 {
     if(_onEnter)
     {

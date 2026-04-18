@@ -39,12 +39,12 @@
 #define MIDI_DIR_OUT                    0
 #define MIDI_DIR_IN                     1
 
-class UserInterface 
+class SwitcherLogic 
 {
 public:
-    UserInterface();
+    SwitcherLogic();
     void init(PatchManager* pm);
-    void refresh(UiEvents_t events);
+    void refresh(UiEvents_t events, MidiMsg_t rxMsg);
 
     Patch_t             _curPatch;
     GlobalSettings_t    _globalSettings;
@@ -59,9 +59,9 @@ private:
     uint8_t _curState;                  // Identifies current state
 
     // State handlers
-    void _statePatchSelect(UiEvents_t events);
-    void _statePatchSettings(UiEvents_t events);
-    void _stateGlobalSettings(UiEvents_t events);
+    void _statePatchSelect(UiEvents_t events, MidiMsg_t rxMsg);
+    void _statePatchSettings(UiEvents_t events, MidiMsg_t rxMsg);
+    void _stateGlobalSettings(UiEvents_t events, MidiMsg_t rxMsg);
 
     // Helpers
     void _printPatchInfo(Patch_t patch, bool isActive);

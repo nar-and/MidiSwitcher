@@ -23,7 +23,7 @@
  *-----------------------------------*/
 #include <stdint.h>
 #include "MenuScreen.h"
-#include "UserInterface.h"
+#include "SwitcherLogic.h"
 #include "Display.h"
 
 // Max number of screens in menu
@@ -34,7 +34,7 @@
 #define MENU_ERROR_GENERIC          -1
 
 // Forward declaration of owner - needed to avoid circular dependencies
-class UserInterface;
+class SwitcherLogic;
 
 /**
  * @brief Manage a menu (i.e. a collection of screens that can be navigated for viewing & editing info)
@@ -66,10 +66,10 @@ public:
     /**
      * @brief Menu constructor
      * 
-     * @param ui        : pointer to owner UserInterface instance
+     * @param ui        : pointer to owner SwitcherLogic instance
      * @param lcd       : pointer to display (used by menu for printing)
      */
-    Menu(UserInterface* ui);
+    Menu(SwitcherLogic* ui);
 
     /**
      * @brief Register menu screen and add it to deck
@@ -95,7 +95,7 @@ public:
 
     int8_t _selPosition;
     int8_t _curPosition;
-    UserInterface* _owner;
+    SwitcherLogic* _owner;
     Display* _lcd;
 };
 

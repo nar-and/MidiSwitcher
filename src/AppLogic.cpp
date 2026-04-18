@@ -19,7 +19,7 @@
 #include <stdio.h>          // NULL, sprintf definitions
 #include <Arduino.h>        // All Arduino functions (Serial etc.) 
 #include "UserInput.h"
-#include "UserInterface.h"
+#include "SwitcherLogic.h"
 #include "libs/MIDI_Library/MIDI.h"
 #include "InterfaceUtils.h"
 #include "LoopSwitch.h"
@@ -61,12 +61,13 @@
  *--------------------------------------------------------------------------*/
 static void handleControlChange(byte channel, byte number, byte value);
 static void handleProgramChange(byte channel, byte number);
+static MidiMsg_t MidiMsgRead(void);
 
 /*-----------------------------------*
  * PRIVATE VARIABLES
  *-----------------------------------*/
 static PatchManager patchMgr;
-static UserInterface interface;
+static SwitcherLogic swLogic;
 static LoopSwitch loopSwitch;
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 
@@ -75,6 +76,7 @@ static bool midiInMsgReceived;
 
 // Used to print structured messages with sprintf()
 static char _msgString[50];
+
 
 
 /*-----------------------------------*
@@ -97,7 +99,7 @@ void AppSetup(void)
     UserInputInit();
 
     patchMgr.init();
-    interface.init(&patchMgr);
+    swLogic.init(&patchMgr);
     loopSwitch.init();
 
     // Initialize MIDI communications, listen to all channels
@@ -126,19 +128,18 @@ void AppSetup(void)
  *--------------------------------------------------------------------------*/
 void AppLoop(void)
 {
-    // Call MIDI.read the fastest you can for real-time performance.
-    MIDI.read();
-    
-    if(midiInMsgReceived)
-    {        
-        midiInMsgReceived = false;
-        // TODO: deal with MIDI IN messages        
+    // Read external inputs 
+    MidiMsg_t rxMsg = MidiMsgRead();        // MIDI messages    
+    UiEvents_t events = UserInputRead();    // User inputs on HMI
+
+    // DEBUG
+    if(rxMsg.type != MIDI_TYPE_NONE)
+    {
+#if DEBUG_PRINT        
         printMidiMsg(_msgString, 20, lastMidiInMsg);
         Serial.println(_msgString);
+#endif        
     }
-
-    // Read user inputs
-    UiEvents_t events = UserInputRead();
 
     if(UserInputIsAnyActive(events))
     {        
@@ -154,9 +155,8 @@ void AppLoop(void)
 #endif
     }
 
-
-    // Process user inputs
-    interface.refresh(events);
+    // Process external inputs
+    swLogic.refresh(events, rxMsg);
 }
 
 /*-----------------------------------*
@@ -168,6 +168,23 @@ void AppLoop(void)
  * Implementation notes:
  * None
  *--------------------------------------------------------------------------*/
+MidiMsg_t MidiMsgRead(void)
+{
+    // Call MIDI.read the fastest you can for real-time performance.
+    MIDI.read();
+    
+    if(midiInMsgReceived)
+    {        
+        midiInMsgReceived = false;
+        return lastMidiInMsg;
+    }
+    else
+    {
+        return {MIDI_TYPE_NONE, 0, 0, 0};
+    }
+}
+
+
 void handleControlChange(byte channel, byte number, byte value)
 {
     lastMidiInMsg = {MIDI_TYPE_CC, channel, number, value};
