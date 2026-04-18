@@ -1,6 +1,6 @@
 #include "Menu.h"
 
-Menu::Menu(UserInterface* ui)
+Menu::Menu(SwitcherLogic* ui)
 {
     _owner = ui;
     _lcd = &_owner->_lcd;
